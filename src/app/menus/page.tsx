@@ -51,8 +51,8 @@ export default function MenusPage() {
       <section className="max-w-7xl mx-auto px-6 mb-24">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Dinner */}
-          <Link href="/menus/dinner" passHref legacyBehavior>
-          <motion.a
+          <Link href="/menus/dinner" className="block w-full">
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 }}
@@ -66,12 +66,12 @@ export default function MenusPage() {
                 View Dinner Menu
               </span>
             </div>
-          </motion.a>
+          </motion.div>
           </Link>
 
           {/* Happy Hour */}
-          <Link href="/menus/happy-hour" passHref legacyBehavior>
-          <motion.a
+          <Link href="/menus/happy-hour" className="block w-full">
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.4 }}
@@ -91,16 +91,16 @@ export default function MenusPage() {
                 View Happy Hour Menu
               </span>
             </div>
-          </motion.a>
+          </motion.div>
           </Link>
 
           {/* Breakfast */}
-          <Link href="/menus/breakfast" passHref legacyBehavior>
-          <motion.a
+          <Link href="/menus/breakfast" className="md:col-span-2 block w-full">
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="md:col-span-2 relative rounded-2xl overflow-hidden group bg-gradient-to-br from-redz-charcoal-light to-black/40 border border-white/10 p-12 flex flex-col md:flex-row justify-between items-center"
+            className="relative rounded-2xl overflow-hidden group bg-gradient-to-br from-redz-charcoal-light to-black/40 border border-white/10 p-12 flex flex-col md:flex-row justify-between items-center"
           >
             <div className="absolute inset-0 z-0">
               <Image unoptimized src="/images/original/appetizer-spread-with-beer.jpg" alt="Breakfast Background" fill className="object-cover opacity-20 transition-transform duration-700 group-hover:scale-105" />
@@ -112,7 +112,7 @@ export default function MenusPage() {
             <span className="inline-block text-sm uppercase tracking-wider border border-redz-accent text-redz-accent px-6 py-3 rounded hover:bg-redz-accent hover:text-white transition-colors">
               View Breakfast Menu
             </span>
-          </motion.a>
+          </motion.div>
           </Link>
         </div>
       </section>
