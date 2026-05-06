@@ -4,7 +4,36 @@ import { MapPin, Phone, Mail } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="bg-redz-charcoal text-white pt-20 pb-10 border-t border-redz-charcoal-light">
+    <footer className="bg-redz-charcoal text-white pt-0 pb-10 border-t border-redz-charcoal-light">
+      
+      {/* Hotel Booking CTA */}
+      <div className="bg-redz-charcoal border-y border-redz-accent/20 py-24 px-6 relative overflow-hidden mb-16 mt-[-1px]">
+        <div className="absolute inset-0 z-0">
+          <Image unoptimized src="/images/original/hotel_stay_cta.jpg" alt="DoubleTree Suites Hotel Room" fill className="object-cover opacity-40 mix-blend-luminosity" />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-redz-charcoal via-redz-charcoal/60 to-redz-charcoal/80 z-0 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-redz-charcoal/50 via-transparent to-redz-charcoal/50 z-0 pointer-events-none" />
+        <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-l from-redz-accent/10 to-transparent pointer-events-none z-0" />
+        
+        <div className="max-w-4xl mx-auto text-center relative z-10">
+          <div className="inline-block mb-4 px-4 py-1 rounded-full border border-redz-accent/30 bg-redz-accent/10 text-red-200 text-xs font-semibold tracking-widest uppercase">
+            Stay With Us
+          </div>
+          <h3 className="text-3xl md:text-5xl font-serif text-white mb-6">Extend Your Experience</h3>
+          <p className="text-gray-300 text-lg mb-10 max-w-2xl mx-auto leading-relaxed">
+            After a phenomenal meal at Redz, relax and unwind for the night. We are proudly located inside the beautiful DoubleTree Suites by Hilton Mt. Laurel.
+          </p>
+          <a 
+            href="https://www.hilton.com/en/hotels/phlfrdt-doubletree-suites-mt-laurel/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block bg-redz-accent text-white px-10 py-4 text-sm font-bold tracking-[0.2em] uppercase hover:bg-white hover:text-redz-charcoal transition-all duration-300 border border-transparent hover:border-white shadow-[0_0_20px_rgba(186,28,33,0.3)] hover:shadow-white/20"
+          >
+            Book Your Suite
+          </a>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
         <div>
           <div className="mb-6">

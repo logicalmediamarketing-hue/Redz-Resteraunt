@@ -11,13 +11,21 @@ export default function AIConcierge() {
   const [isOpen, setIsOpen] = useState(false);
   const [isVoiceModeActive, setIsVoiceModeActive] = useState(false);
   
+  const [input, setInput] = useState("");
+  
   // @ts-expect-error - ignore typing issues for AI SDK
-  const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
-    streamProtocol: 'text',
-    initialMessages: [
-      { id: "initial", role: "assistant", content: "Welcome to Redz! I'm Henry, your personal concierge. How can I assist you with reservations or menu questions today?" }
+  const { messages, sendMessage, isLoading, error } = useChat({
+    messages: [
+      { id: "initial", role: "assistant", parts: [{ type: "text", text: "Welcome to Redz! I'm Henry, your personal concierge. How can I assist you today?" }] }
     ]
   } as any);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+    sendMessage({ text: input });
+    setInput("");
+  };
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -76,7 +84,7 @@ export default function AIConcierge() {
                   {messages.map((msg: any) => (
                     <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[80%] p-3 rounded-2xl text-sm leading-relaxed ${msg.role === 'user' ? 'bg-redz-accent text-redz-charcoal rounded-tr-sm' : 'bg-redz-charcoal-light border border-gray-800 text-gray-200 rounded-tl-sm'}`}>
-                        {msg.content}
+                        {msg.parts?.map((part: any, i: number) => part.type === 'text' ? part.text : '').join('') || msg.content}
                       </div>
                     </div>
                   ))}
@@ -92,7 +100,7 @@ export default function AIConcierge() {
                   {error && (
                     <div className="flex justify-center my-2">
                       <div className="text-xs text-red-400 bg-red-400/10 border border-red-400/20 px-4 py-2 rounded-lg text-center max-w-[90%]">
-                        Henry is currently offline. Please configure your OpenAI API keys to reconnect.
+                        Henry is currently offline. Please configure your Google Gemini API key to reconnect.
                       </div>
                     </div>
                   )}
@@ -114,7 +122,7 @@ export default function AIConcierge() {
                       <input
                         type="text"
                         value={input}
-                        onChange={handleInputChange}
+                        onChange={(e) => setInput(e.target.value)}
                         placeholder="Ask Henry..."
                         className="w-full bg-redz-charcoal-light border border-gray-800 text-white text-sm rounded-full pl-4 pr-10 py-3 focus:outline-none focus:border-redz-accent focus:ring-1 focus:ring-redz-accent transition-all"
                       />

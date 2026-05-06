@@ -11,7 +11,7 @@ export default function NewsEventsPage() {
       title: "Thursday Night Special",
       time: "Every Thursday | 4:00pm - Close",
       desc: "Bartender's Choice: $15.00 bottle of wine! Discount available at bar only.",
-      img: "/images/original/bar-and-lounge-02.jpg"
+      img: "/images/original/thursday_wine_special.jpg"
     },
     {
       title: "Fun After Four",
@@ -32,13 +32,13 @@ export default function NewsEventsPage() {
       <Navbar />
 
       {/* Hero Banner */}
-      <section className="relative h-[40vh] min-h-[300px] w-full flex items-center justify-center overflow-hidden mb-16">
-        <div className="absolute inset-0 z-0">
-          <Image src="/images/original/happy-hour.jpg" alt="News and Events" fill className="object-cover opacity-60" priority />
+      <section className="relative h-[50vh] min-h-[450px] w-full mb-16 pt-[120px]">
+        <div className="absolute top-0 inset-x-0 h-[75vh] z-0 pointer-events-none">
+          <Image unoptimized src="/images/original/news_hero.jpg" alt="News and Events" fill className="object-cover opacity-60" priority />
+          <div className="absolute inset-0 bg-gradient-to-t from-redz-charcoal via-redz-charcoal/60 to-transparent z-10"></div>
         </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-redz-charcoal via-redz-charcoal/50 to-transparent z-10"></div>
         
-        <div className="relative z-20 text-center px-4 max-w-4xl mx-auto pt-20">
+        <div className="relative z-20 text-center px-4 max-w-4xl mx-auto pt-8 md:pt-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -57,7 +57,7 @@ export default function NewsEventsPage() {
         </div>
       </section>
 
-      <section className="max-w-4xl mx-auto px-6 mb-16 text-center">
+      <section className="relative z-10 max-w-4xl mx-auto px-6 mb-16 text-center">
         <motion.p 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -68,7 +68,7 @@ export default function NewsEventsPage() {
         </motion.p>
       </section>
 
-      <section className="max-w-7xl mx-auto px-6 mb-24">
+      <section className="relative z-10 max-w-7xl mx-auto px-6 mb-24">
 
         <div className="grid md:grid-cols-3 gap-8">
           {specials.map((special, i) => (
