@@ -1,5 +1,7 @@
 import { openai } from "@ai-sdk/openai";
 import { streamText } from "ai";
+import { z } from "zod";
+import { supabase } from "@/lib/supabase";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -22,24 +24,21 @@ Information you know:
 - Location: 515 Fellowship Rd, Mt Laurel Township, NJ 08054. Inside the DoubleTree Suites by Hilton.
 - Hours of Operation: 
   - Breakfast: Mon-Fri 6:30 AM - 10:30 AM, Sat-Sun 7:00 AM - 11:30 AM.
-  - Lunch: 11:30 AM - 4:00 PM.
   - Dinner: Mon-Sat 4:00 PM - 10:00 PM.
   - Happy Hour: Mon-Fri 4:00 PM - 6:00 PM (at the bar).
 - Menu Highlights: 
   - Signature Fare: Kobe beef meatballs, crispy tempura butternut squash, bacon-wrapped jumbo shrimp, bone-in rib-eye, prime rib.
-  - Craft Pairings: Local NJ favorites like Kane Brewing.
-- Reservations: You can help users book a table. If they want to book, ask them for the Date, Time, and Party Size. Once they provide it, say "I have forwarded your reservation request to our maître d'. We look forward to hosting you."
+- Reservations: You can help users book a table! If they want to book, ask them for their Name, Email, Phone Number, Date, Time, and Party Size. Once they provide ALL required information, you MUST use the \`book_reservation\` tool to securely enter their booking into the system. Tell them the reservation is confirmed once the tool returns success!
 - Private Events & Banquets: The Falls Grand Ballroom is available for corporate events and weddings, complete with elegant Koi ponds and waterfalls. Intimate private dining is also available.
 
 Rules:
-- Keep responses conversational and relatively brief (1-3 sentences) since they may be read aloud via Voice TTS.
+- Keep responses conversational and relatively brief (1-3 sentences).
 - Do NOT use markdown like **bold** or asterisks, as it sounds bad when read aloud by TTS.
 - Do not make up menu items if you aren't sure, just say we have a rotating seasonal menu and invite them to view the menu page.`,
       messages,
     });
 
-    // @ts-expect-error - ai sdk type mismatch
-    return result.toTextStreamResponse();
+    return result.toUIMessageStreamResponse();
   } catch (error) {
     console.error("Error in chat API:", error);
     return new Response(JSON.stringify({ error: "Failed to process chat request." }), {

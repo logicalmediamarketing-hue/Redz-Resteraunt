@@ -13,7 +13,6 @@ export default function AIConcierge() {
   
   // @ts-expect-error - ignore typing issues for AI SDK
   const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
-    streamProtocol: 'text',
     initialMessages: [
       { id: "initial", role: "assistant", content: "Welcome to Redz! I'm Henry, your personal concierge. How can I assist you with reservations or menu questions today?" }
     ]
