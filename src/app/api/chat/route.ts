@@ -1,5 +1,5 @@
 import { openai } from "@ai-sdk/openai";
-import { streamText } from "ai";
+import { streamText, convertToModelMessages } from "ai";
 import { z } from "zod";
 import { supabase } from "@/lib/supabase";
 
@@ -35,7 +35,7 @@ Rules:
 - Keep responses conversational and relatively brief (1-3 sentences).
 - Do NOT use markdown like **bold** or asterisks, as it sounds bad when read aloud by TTS.
 - Do not make up menu items if you aren't sure, just say we have a rotating seasonal menu and invite them to view the menu page.`,
-      messages,
+      messages: await convertToModelMessages(messages),
     });
 
     return result.toUIMessageStreamResponse();
