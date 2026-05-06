@@ -20,8 +20,10 @@ export default function Navbar() {
 
   return (
     <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? "bg-redz-charcoal/90 backdrop-blur-md shadow-lg" : "bg-transparent"}`}>
-      <div className="w-full bg-redz-accent/10 border-b border-redz-accent/20 backdrop-blur-sm text-white text-xs md:text-sm font-bold tracking-wider text-center py-2">
-        DoubleTree Suites by Hilton Mt Laurel
+      <div className="w-full bg-redz-accent/10 border-b border-redz-accent/20 backdrop-blur-sm text-white text-xs md:text-sm font-bold tracking-wider text-center py-2 hover:bg-redz-accent/20 transition-colors">
+        <a href="https://www.hilton.com/en/hotels/phlfrdt-doubletree-suites-mt-laurel/" target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+          DoubleTree Suites by Hilton Mt Laurel
+        </a>
       </div>
       <div className={`max-w-7xl mx-auto px-6 flex justify-between items-center transition-all duration-300 ${isScrolled ? "py-4" : "py-6"}`}>
         <Link href="/" className="flex items-center gap-2">
