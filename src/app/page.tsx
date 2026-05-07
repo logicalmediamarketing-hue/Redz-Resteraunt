@@ -126,13 +126,20 @@ export default function Home() {
       </section>
 
       {/* Banquets Callout */}
-      <section id="banquets" className="py-24 bg-redz-charcoal-light border-y border-white/5">
-        <div className="max-w-7xl mx-auto px-6 text-center">
+      <section id="banquets" className="relative py-32 border-y border-white/5 overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <Image unoptimized src="/images/ballroom-bqt1-optimized.jpg" alt="Falls Grand Ballroom" fill className="object-cover opacity-60" priority />
+          <div className="absolute inset-0 bg-redz-charcoal/80 mix-blend-multiply"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-redz-charcoal via-redz-charcoal/40 to-redz-charcoal"></div>
+        </div>
+
+        <div className="relative z-10 max-w-7xl mx-auto px-6 text-center">
           <h2 className="text-4xl md:text-5xl font-serif text-white mb-6">Host Your Event</h2>
-          <p className="text-xl text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed">
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-10 leading-relaxed font-light">
             From intimate private dining to grand celebrations in the Falls Grand Ballroom, complete with elegant Koi ponds and waterfalls.
           </p>
-          <Link href="/banquets" className="inline-block border border-redz-accent text-redz-accent px-10 py-4 rounded font-bold hover:bg-redz-accent hover:text-redz-charcoal transition-colors text-lg">
+          <Link href="/banquets" className="inline-block border border-redz-accent text-redz-accent px-10 py-4 rounded font-bold hover:bg-redz-accent hover:text-redz-charcoal transition-colors text-lg backdrop-blur-sm">
             Inquire About Banquets
           </Link>
         </div>
