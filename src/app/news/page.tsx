@@ -17,13 +17,13 @@ export default function NewsEventsPage() {
       title: "Fun After Four",
       time: "Monday - Thursday | 4:00pm - 6:00pm",
       desc: "Join us for our legendary happy hour with discounted drinks and appetizers at the bar.",
-      img: "/images/original/happy-hour.jpg"
+      img: "/images/original/craft-cocktails.jpg"
     },
     {
       title: "It's Back! The 28 oz. Bone-in-Rib Eye",
       time: "Available Daily",
       desc: "For the meat lovers out there, this will satisfy any appetite. Ask your server for details.",
-      img: "/images/original/bone-in-rib-eye.jpg"
+      img: "/images/bone-in-rib-eye-hq.png"
     }
   ];
 
