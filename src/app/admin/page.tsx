@@ -30,6 +30,8 @@ type Reservation = {
 
 export default function AdminPage() {
   const [user, setUser] = useState<User | null>(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLogin, setIsLogin] = useState(true);
@@ -52,6 +54,10 @@ export default function AdminPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
   
+  // Delete Modal
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [reservationToDelete, setReservationToDelete] = useState<string | null>(null);
+  
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -66,10 +72,12 @@ export default function AdminPage() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      setIsCheckingAuth(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      setIsCheckingAuth(false);
     });
 
     return () => subscription.unsubscribe();
@@ -134,19 +142,26 @@ export default function AdminPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to permanently remove this reservation from the dashboard?")) {
-      // Perform a soft-delete by renaming to bypass strict ENUM/CHECK restrictions on the status column
-      const { error } = await supabase
-        .from('reservations')
-        .update({ status: 'cancelled', name: 'DELETED_' + id })
-        .eq('id', id);
-      
-      if (!error) {
-        setReservations(reservations.filter(r => r.id !== id));
-      } else {
-        alert("Failed to delete: " + error.message);
-      }
+  const confirmDelete = (id: string) => {
+    setReservationToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const executeDelete = async () => {
+    if (!reservationToDelete) return;
+    
+    // Perform a soft-delete by renaming to bypass strict ENUM/CHECK restrictions on the status column
+    const { error } = await supabase
+      .from('reservations')
+      .update({ status: 'cancelled', name: 'DELETED_' + reservationToDelete })
+      .eq('id', reservationToDelete);
+    
+    if (!error) {
+      setReservations(reservations.filter(r => r.id !== reservationToDelete));
+      setIsDeleteModalOpen(false);
+      setReservationToDelete(null);
+    } else {
+      alert("Failed to delete: " + error.message);
     }
   };
 
@@ -262,6 +277,15 @@ export default function AdminPage() {
     return { pending, confirmed, todayGuests, total: reservations.length };
   }, [reservations]);
 
+  // Handle Auth Checking State (prevents login flicker)
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-redz-charcoal flex items-center justify-center">
+        <RefreshCw className="w-10 h-10 text-redz-accent animate-spin" />
+      </div>
+    );
+  }
+
   if (!user) {
     return (
       <div className="min-h-screen bg-redz-charcoal flex">
@@ -320,7 +344,11 @@ export default function AdminPage() {
             </form>
             
             <div className="mt-8 text-center lg:text-left">
-              <button onClick={() => { setIsLogin(!isLogin); setAuthError(null); setAuthSuccess(null); }} className="text-gray-500 text-sm hover:text-white transition-colors">
+              <button 
+                type="button"
+                onClick={() => { setIsLogin(!isLogin); setAuthError(null); setAuthSuccess(null); }} 
+                className="text-gray-500 text-sm hover:text-white transition-colors"
+              >
                 {isLogin ? "Need access? Create an account" : "Return to secure login"}
               </button>
             </div>
@@ -342,7 +370,7 @@ export default function AdminPage() {
         </div>
         <div className="flex items-center gap-6">
           <span className="text-sm text-gray-400 hidden sm:inline-block">{user.email}</span>
-          <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
+          <button type="button" onClick={handleLogout} className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
             <LogOut className="w-4 h-4" /> <span className="hidden sm:inline">Sign Out</span>
           </button>
         </div>
@@ -357,6 +385,7 @@ export default function AdminPage() {
             
             <div className="hidden sm:flex bg-black/50 p-1 rounded-lg border border-white/10">
               <button 
+                type="button"
                 onClick={() => setViewMode("list")}
                 className={`px-3 py-1.5 rounded-md flex items-center gap-2 transition-colors ${viewMode === 'list' ? 'bg-white/20 text-white shadow-sm' : 'text-gray-500 hover:text-white'}`}
               >
@@ -364,6 +393,7 @@ export default function AdminPage() {
                 <span className="text-sm font-medium">List</span>
               </button>
               <button 
+                type="button"
                 onClick={() => setViewMode("calendar")}
                 className={`px-3 py-1.5 rounded-md flex items-center gap-2 transition-colors ${viewMode === 'calendar' ? 'bg-white/20 text-white shadow-sm' : 'text-gray-500 hover:text-white'}`}
               >
@@ -374,6 +404,7 @@ export default function AdminPage() {
           </div>
           
           <button 
+            type="button"
             onClick={openAddModal}
             className="bg-redz-accent text-redz-charcoal px-5 py-2.5 rounded-lg font-bold hover:bg-white transition-colors flex items-center gap-2 w-full sm:w-auto justify-center"
           >
@@ -385,6 +416,7 @@ export default function AdminPage() {
         {/* Mobile View Toggle */}
         <div className="flex sm:hidden bg-black/50 p-1 rounded-lg border border-white/10 mb-6">
           <button 
+            type="button"
             onClick={() => setViewMode("list")}
             className={`flex-1 py-2 rounded-md flex justify-center items-center gap-2 transition-colors ${viewMode === 'list' ? 'bg-white/20 text-white shadow-sm' : 'text-gray-500 hover:text-white'}`}
           >
@@ -392,6 +424,7 @@ export default function AdminPage() {
             <span className="text-sm font-medium">List</span>
           </button>
           <button 
+            type="button"
             onClick={() => setViewMode("calendar")}
             className={`flex-1 py-2 rounded-md flex justify-center items-center gap-2 transition-colors ${viewMode === 'calendar' ? 'bg-white/20 text-white shadow-sm' : 'text-gray-500 hover:text-white'}`}
           >
@@ -440,13 +473,13 @@ export default function AdminPage() {
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-serif text-white">{format(currentMonth, "MMMM yyyy")}</h3>
               <div className="flex gap-2">
-                <button onClick={prevMonth} className="p-2 bg-black/40 hover:bg-black/80 rounded border border-white/10 transition-colors">
+                <button type="button" onClick={prevMonth} className="p-2 bg-black/40 hover:bg-black/80 rounded border border-white/10 transition-colors">
                   <ChevronLeft className="w-5 h-5 text-gray-300" />
                 </button>
-                <button onClick={() => setCurrentMonth(new Date())} className="px-4 py-2 bg-black/40 hover:bg-black/80 rounded border border-white/10 text-sm text-gray-300 transition-colors">
+                <button type="button" onClick={() => setCurrentMonth(new Date())} className="px-4 py-2 bg-black/40 hover:bg-black/80 rounded border border-white/10 text-sm text-gray-300 transition-colors">
                   Today
                 </button>
-                <button onClick={nextMonth} className="p-2 bg-black/40 hover:bg-black/80 rounded border border-white/10 transition-colors">
+                <button type="button" onClick={nextMonth} className="p-2 bg-black/40 hover:bg-black/80 rounded border border-white/10 transition-colors">
                   <ChevronRight className="w-5 h-5 text-gray-300" />
                 </button>
               </div>
@@ -532,7 +565,7 @@ export default function AdminPage() {
                     className="w-full sm:w-auto bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-gray-300 focus:outline-none focus:border-redz-accent [color-scheme:dark]"
                   />
                   {dateFilter && (
-                    <button onClick={() => setDateFilter("")} className="text-gray-500 hover:text-white p-2" title="Clear Date Filter">
+                    <button type="button" onClick={() => setDateFilter("")} className="text-gray-500 hover:text-white p-2" title="Clear Date Filter">
                       <XCircle className="w-5 h-5" />
                     </button>
                   )}
@@ -551,6 +584,7 @@ export default function AdminPage() {
                 </select>
                 
                 <button 
+                  type="button"
                   onClick={fetchReservations} 
                   disabled={loading}
                   className="bg-white/5 hover:bg-white/10 border border-white/10 text-white px-4 py-2.5 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
@@ -574,7 +608,7 @@ export default function AdminPage() {
                     <CalendarIcon className="w-12 h-12 mb-4 opacity-20" />
                     <p className="text-lg">No reservations match your filters.</p>
                     {(searchTerm || statusFilter !== 'all' || dateFilter) && (
-                      <button onClick={() => { setSearchTerm(''); setStatusFilter('all'); setDateFilter(''); }} className="mt-4 text-redz-accent hover:underline text-sm">
+                      <button type="button" onClick={() => { setSearchTerm(''); setStatusFilter('all'); setDateFilter(''); }} className="mt-4 text-redz-accent hover:underline text-sm">
                         Clear All Filters
                       </button>
                     )}
@@ -661,6 +695,7 @@ export default function AdminPage() {
                             <td className="px-6 py-4 text-right">
                               <div className="flex items-center justify-end gap-2">
                                 <button 
+                                  type="button"
                                   onClick={() => openEditModal(res)}
                                   className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded transition-colors"
                                   title="Edit Reservation"
@@ -668,7 +703,8 @@ export default function AdminPage() {
                                   <Edit2 className="w-4 h-4" />
                                 </button>
                                 <button 
-                                  onClick={() => handleDelete(res.id)}
+                                  type="button"
+                                  onClick={() => confirmDelete(res.id)}
                                   className="p-2 text-red-400 hover:text-white hover:bg-red-500/20 rounded transition-colors"
                                   title="Delete Reservation"
                                 >
@@ -688,6 +724,35 @@ export default function AdminPage() {
         )}
       </main>
 
+      {/* Delete Confirmation Modal Overlay */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
+          <div className="bg-redz-charcoal border border-white/10 rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center">
+            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-red-500" />
+            </div>
+            <h3 className="text-xl font-serif text-white mb-2">Delete Reservation?</h3>
+            <p className="text-sm text-gray-400 mb-6">This action cannot be undone. It will be permanently removed from your dashboard.</p>
+            <div className="flex gap-3">
+              <button 
+                type="button" 
+                onClick={() => { setIsDeleteModalOpen(false); setReservationToDelete(null); }}
+                className="flex-1 bg-white/5 hover:bg-white/10 text-white font-medium py-2.5 rounded-lg transition-colors border border-white/10"
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                onClick={executeDelete}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-lg transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Add / Edit Modal Overlay */}
       {(isAddModalOpen || isEditModalOpen) && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
@@ -696,7 +761,7 @@ export default function AdminPage() {
               <h2 className="text-2xl font-serif text-white">
                 {isEditModalOpen ? "Edit Reservation" : "New Reservation"}
               </h2>
-              <button onClick={closeModals} className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors">
+              <button type="button" onClick={closeModals} className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors">
                 <X className="w-6 h-6" />
               </button>
             </div>
