@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -78,20 +79,49 @@ export default function ReservationsPage() {
   };
 
   return (
-    <main className="min-h-screen bg-redz-charcoal text-white pt-32 pb-24">
+    <main className="min-h-screen bg-redz-charcoal text-white pb-24">
       <Navbar />
       
-      <div className="max-w-3xl mx-auto px-6">
+      {/* Hero Banner */}
+      <section className="relative h-[50vh] min-h-[450px] w-full mb-16 pt-[120px]">
+        <div className="absolute top-0 inset-x-0 h-[75vh] z-0 pointer-events-none">
+          <Image unoptimized src="/images/reservations-hero.png" alt="Reserve Your Table" fill className="object-cover opacity-60" priority />
+          <div className="absolute inset-0 bg-gradient-to-t from-redz-charcoal via-redz-charcoal/60 to-transparent z-10"></div>
+        </div>
+        
+        <div className="relative z-20 text-center px-4 max-w-4xl mx-auto pt-8 md:pt-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="inline-block mb-6 px-6 py-2 rounded-full border border-redz-accent/50 bg-redz-accent/20 backdrop-blur-md text-red-100 text-sm font-medium tracking-widest uppercase"
+          >
+            Premium Dining
+          </motion.div>
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-5xl md:text-7xl font-serif text-white mb-6 leading-tight drop-shadow-xl"
+          >
+            Reserve Your Table
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-gray-300 text-lg md:text-xl"
+          >
+            Join us for an unforgettable dining experience at Redz Restaurant.
+          </motion.p>
+        </div>
+      </section>
+
+      <div className="relative z-10 max-w-3xl mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
         >
-          <div className="text-center mb-12">
-            <h1 className="text-5xl font-serif text-white mb-4">Reserve Your Table</h1>
-            <p className="text-gray-400">Join us for an unforgettable dining experience at Redz Restaurant.</p>
-          </div>
-
           <div className="bg-redz-charcoal-light border border-redz-accent/20 rounded-2xl p-8 md:p-12 shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-redz-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
             
