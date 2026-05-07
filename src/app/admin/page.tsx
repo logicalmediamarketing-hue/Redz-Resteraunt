@@ -3,8 +3,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
-import { format, isToday, parseISO } from "date-fns";
-import { Search, Calendar, Users, Clock, CheckCircle, XCircle, AlertCircle, LogOut, RefreshCw, LayoutDashboard } from "lucide-react";
+import { format, isToday, parseISO, isValid } from "date-fns";
+import { Search, Calendar, Users, Clock, CheckCircle, XCircle, AlertCircle, LogOut, RefreshCw, LayoutDashboard, Plus, Edit2, Trash2, X } from "lucide-react";
 import Image from "next/image";
 
 type Reservation = {
@@ -33,6 +33,23 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState(""); // "" means all dates
+
+  // Modals
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
+  
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    date: "",
+    time: "",
+    party_size: "2",
+    special_requests: "",
+    status: "confirmed"
+  });
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -104,23 +121,120 @@ export default function AdminPage() {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    if (window.confirm("Are you sure you want to permanently delete this reservation?")) {
+      const { error } = await supabase.from('reservations').delete().eq('id', id);
+      if (!error) {
+        setReservations(reservations.filter(r => r.id !== id));
+      } else {
+        alert("Failed to delete: " + error.message);
+      }
+    }
+  };
+
+  const handleSaveReservation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const payload = {
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      date: formData.date,
+      time: formData.time,
+      party_size: parseInt(formData.party_size),
+      special_requests: formData.special_requests,
+      status: formData.status
+    };
+
+    if (isEditModalOpen && editingReservation) {
+      // Update
+      const { data, error } = await supabase
+        .from('reservations')
+        .update(payload)
+        .eq('id', editingReservation.id)
+        .select()
+        .single();
+      
+      if (!error && data) {
+        setReservations(reservations.map(r => r.id === editingReservation.id ? data : r));
+        closeModals();
+      } else {
+        alert("Update failed: " + error?.message);
+      }
+    } else {
+      // Insert
+      const { data, error } = await supabase
+        .from('reservations')
+        .insert([payload])
+        .select()
+        .single();
+      
+      if (!error && data) {
+        setReservations([...reservations, data].sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time)));
+        closeModals();
+      } else {
+        alert("Creation failed: " + error?.message);
+      }
+    }
+  };
+
+  const openEditModal = (res: Reservation) => {
+    setEditingReservation(res);
+    setFormData({
+      name: res.name,
+      email: res.email || "",
+      phone: res.phone || "",
+      date: res.date,
+      time: res.time,
+      party_size: res.party_size.toString(),
+      special_requests: res.special_requests || "",
+      status: res.status
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const openAddModal = () => {
+    setFormData({
+      name: "",
+      email: "",
+      phone: "",
+      date: format(new Date(), "yyyy-MM-dd"),
+      time: "18:00",
+      party_size: "2",
+      special_requests: "",
+      status: "confirmed" // walk-ins/phone-ins usually confirmed immediately
+    });
+    setIsAddModalOpen(true);
+  };
+
+  const closeModals = () => {
+    setIsAddModalOpen(false);
+    setIsEditModalOpen(false);
+    setEditingReservation(null);
+  };
+
   // Derived State & Filters
   const filteredReservations = useMemo(() => {
     return reservations.filter(res => {
       const matchesSearch = 
         res.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        res.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        res.phone.includes(searchTerm);
+        (res.email && res.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (res.phone && res.phone.includes(searchTerm));
       const matchesStatus = statusFilter === "all" || res.status === statusFilter;
-      return matchesSearch && matchesStatus;
+      const matchesDate = dateFilter === "" || res.date === dateFilter;
+      
+      return matchesSearch && matchesStatus && matchesDate;
     });
-  }, [reservations, searchTerm, statusFilter]);
+  }, [reservations, searchTerm, statusFilter, dateFilter]);
 
   const stats = useMemo(() => {
     const pending = reservations.filter(r => r.status === 'pending').length;
     const confirmed = reservations.filter(r => r.status === 'confirmed').length;
     const todayGuests = reservations
-      .filter(r => (r.status === 'confirmed' || r.status === 'pending') && isToday(parseISO(r.date)))
+      .filter(r => {
+        if (r.status !== 'confirmed' && r.status !== 'pending') return false;
+        try { return isToday(parseISO(r.date)); } catch { return false; }
+      })
       .reduce((sum, r) => sum + r.party_size, 0);
     
     return { pending, confirmed, todayGuests, total: reservations.length };
@@ -214,6 +328,18 @@ export default function AdminPage() {
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-6 lg:p-8">
         
+        {/* Header Action Row */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+          <h2 className="text-3xl font-serif">Reservation Management</h2>
+          <button 
+            onClick={openAddModal}
+            className="bg-redz-accent text-redz-charcoal px-5 py-2.5 rounded-lg font-bold hover:bg-white transition-colors flex items-center gap-2"
+          >
+            <Plus className="w-5 h-5" />
+            New Booking
+          </button>
+        </div>
+
         {/* Stats Row */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-redz-charcoal-light border border-white/5 p-6 rounded-2xl">
@@ -250,8 +376,8 @@ export default function AdminPage() {
         </div>
 
         {/* Filters Row */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6 justify-between items-center">
-          <div className="relative w-full md:w-96">
+        <div className="bg-redz-charcoal-light border border-white/5 p-4 rounded-xl mb-6 flex flex-col md:flex-row gap-4 justify-between items-center">
+          <div className="relative w-full md:w-96 flex-shrink-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
             <input 
               type="text" 
@@ -262,11 +388,26 @@ export default function AdminPage() {
             />
           </div>
           
-          <div className="flex items-center gap-4 w-full md:w-auto">
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+            {/* Date Filter */}
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <input 
+                type="date" 
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="w-full sm:w-auto bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-gray-300 focus:outline-none focus:border-redz-accent [color-scheme:dark]"
+              />
+              {dateFilter && (
+                <button onClick={() => setDateFilter("")} className="text-gray-500 hover:text-white p-2">
+                  <XCircle className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+
             <select 
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full md:w-auto bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-redz-accent appearance-none transition-colors"
+              className="w-full sm:w-auto bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-redz-accent appearance-none transition-colors cursor-pointer"
             >
               <option value="all">All Statuses</option>
               <option value="pending">Pending</option>
@@ -281,7 +422,7 @@ export default function AdminPage() {
               className="bg-white/5 hover:bg-white/10 border border-white/10 text-white px-4 py-2.5 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline">Refresh</span>
+              <span className="hidden sm:inline">Sync</span>
             </button>
           </div>
         </div>
@@ -297,12 +438,12 @@ export default function AdminPage() {
             ) : filteredReservations.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-64 text-gray-400">
                 <Calendar className="w-12 h-12 mb-4 opacity-20" />
-                <p className="text-lg">No reservations found.</p>
-                {searchTerm || statusFilter !== 'all' ? (
-                  <button onClick={() => { setSearchTerm(''); setStatusFilter('all'); }} className="mt-4 text-redz-accent hover:underline text-sm">
-                    Clear Filters
+                <p className="text-lg">No reservations match your filters.</p>
+                {(searchTerm || statusFilter !== 'all' || dateFilter) && (
+                  <button onClick={() => { setSearchTerm(''); setStatusFilter('all'); setDateFilter(''); }} className="mt-4 text-redz-accent hover:underline text-sm">
+                    Clear All Filters
                   </button>
-                ) : null}
+                )}
               </div>
             ) : (
               <table className="w-full text-left border-collapse whitespace-nowrap">
@@ -317,15 +458,22 @@ export default function AdminPage() {
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {filteredReservations.map(res => {
-                    const resDate = parseISO(res.date);
-                    const today = isToday(resDate);
+                    let isResToday = false;
+                    let displayDate = res.date;
+                    try {
+                      const resDate = parseISO(res.date);
+                      isResToday = isValid(resDate) && isToday(resDate);
+                      displayDate = isValid(resDate) ? format(resDate, "MMM d, yyyy") : res.date;
+                    } catch (e) {
+                      // Fallback
+                    }
 
                     return (
                       <tr key={res.id} className="hover:bg-white/5 transition-colors group">
                         <td className="px-6 py-4">
                           <div className="font-medium text-white text-base">{res.name}</div>
-                          <div className="text-sm text-gray-400 mt-1">{res.email}</div>
-                          <div className="text-sm text-gray-400">{res.phone}</div>
+                          <div className="text-sm text-gray-400 mt-1">{res.email || "No email"}</div>
+                          <div className="text-sm text-gray-400">{res.phone || "No phone"}</div>
                           {res.special_requests && (
                             <div className="text-xs text-yellow-500/90 mt-2 flex items-start gap-1.5 whitespace-normal max-w-xs bg-yellow-500/10 p-2 rounded border border-yellow-500/20">
                               <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
@@ -336,8 +484,8 @@ export default function AdminPage() {
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2 mb-1">
                             <Calendar className="w-4 h-4 text-gray-500" />
-                            <span className={`text-sm ${today ? 'text-redz-accent font-bold' : 'text-gray-300'}`}>
-                              {today ? "Today" : format(resDate, "MMM d, yyyy")}
+                            <span className={`text-sm ${isResToday ? 'text-redz-accent font-bold' : 'text-gray-300'}`}>
+                              {isResToday ? "Today" : displayDate}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
@@ -351,29 +499,48 @@ export default function AdminPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${
-                            res.status === 'confirmed' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
-                            res.status === 'pending' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
-                            res.status === 'completed' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
-                            'bg-red-500/10 text-red-400 border-red-500/20'
-                          }`}>
-                            {res.status === 'confirmed' && <CheckCircle className="w-3 h-3" />}
-                            {res.status === 'pending' && <Clock className="w-3 h-3" />}
-                            {res.status === 'cancelled' && <XCircle className="w-3 h-3" />}
-                            {res.status}
-                          </span>
+                          <div className="flex flex-col items-start gap-2">
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${
+                              res.status === 'confirmed' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
+                              res.status === 'pending' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
+                              res.status === 'completed' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                              'bg-red-500/10 text-red-400 border-red-500/20'
+                            }`}>
+                              {res.status === 'confirmed' && <CheckCircle className="w-3 h-3" />}
+                              {res.status === 'pending' && <Clock className="w-3 h-3" />}
+                              {res.status === 'cancelled' && <XCircle className="w-3 h-3" />}
+                              {res.status}
+                            </span>
+                            
+                            <select 
+                              value={res.status}
+                              onChange={(e) => updateStatus(res.id, e.target.value)}
+                              className="bg-black/50 border border-white/10 hover:border-white/30 rounded px-2 py-1 text-xs text-gray-300 focus:border-redz-accent outline-none cursor-pointer"
+                            >
+                              <option value="pending">Mark Pending</option>
+                              <option value="confirmed">Confirm</option>
+                              <option value="completed">Complete</option>
+                              <option value="cancelled">Cancel</option>
+                            </select>
+                          </div>
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <select 
-                            value={res.status}
-                            onChange={(e) => updateStatus(res.id, e.target.value)}
-                            className="bg-black/50 border border-white/10 hover:border-white/30 rounded-lg px-3 py-1.5 text-sm text-gray-300 focus:border-redz-accent focus:ring-1 focus:ring-redz-accent outline-none transition-all cursor-pointer"
-                          >
-                            <option value="pending">Mark Pending</option>
-                            <option value="confirmed">Confirm</option>
-                            <option value="completed">Complete</option>
-                            <option value="cancelled">Cancel</option>
-                          </select>
+                          <div className="flex items-center justify-end gap-2">
+                            <button 
+                              onClick={() => openEditModal(res)}
+                              className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded transition-colors"
+                              title="Edit Reservation"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => handleDelete(res.id)}
+                              className="p-2 text-red-400 hover:text-white hover:bg-red-500/20 rounded transition-colors"
+                              title="Delete Reservation"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -384,6 +551,116 @@ export default function AdminPage() {
           </div>
         </div>
       </main>
+
+      {/* Add / Edit Modal Overlay */}
+      {(isAddModalOpen || isEditModalOpen) && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-redz-charcoal border border-white/10 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-white/10 sticky top-0 bg-redz-charcoal z-10">
+              <h2 className="text-2xl font-serif text-white">
+                {isEditModalOpen ? "Edit Reservation" : "New Reservation"}
+              </h2>
+              <button onClick={closeModals} className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSaveReservation} className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Guest Name *</label>
+                  <input 
+                    required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
+                    className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-redz-accent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
+                  <select 
+                    value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})}
+                    className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-redz-accent appearance-none"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
+                  <input 
+                    type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})}
+                    className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-redz-accent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Phone Number</label>
+                  <input 
+                    type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})}
+                    className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-redz-accent"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Date *</label>
+                  <input 
+                    required type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})}
+                    className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-redz-accent [color-scheme:dark]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Time *</label>
+                  <input 
+                    required type="time" value={formData.time} onChange={e => setFormData({...formData, time: e.target.value})}
+                    className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-redz-accent [color-scheme:dark]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Party Size *</label>
+                  <select 
+                    value={formData.party_size} onChange={e => setFormData({...formData, party_size: e.target.value})}
+                    className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-redz-accent appearance-none"
+                  >
+                    {[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20].map(num => (
+                      <option key={num} value={num}>{num} {num === 1 ? 'Person' : 'People'}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Special Requests / Notes</label>
+                <textarea 
+                  value={formData.special_requests} onChange={e => setFormData({...formData, special_requests: e.target.value})} rows={3}
+                  className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-redz-accent resize-none"
+                  placeholder="Anniversary, window seat preferred, dietary restrictions..."
+                ></textarea>
+              </div>
+
+              <div className="flex gap-4 pt-4 border-t border-white/10">
+                <button 
+                  type="button" onClick={closeModals}
+                  className="flex-1 bg-white/5 hover:bg-white/10 text-white font-medium py-3 rounded-lg transition-colors border border-white/10"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="flex-1 bg-redz-accent text-redz-charcoal font-bold py-3 rounded-lg hover:bg-white transition-colors"
+                >
+                  {isEditModalOpen ? "Save Changes" : "Create Booking"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
