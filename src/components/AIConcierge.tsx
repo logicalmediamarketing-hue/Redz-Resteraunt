@@ -3,28 +3,72 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, X, Send, Sparkles, Phone, Volume2, VolumeX, ConciergeBell } from "lucide-react";
-import { useChat } from "@ai-sdk/react";
 import dynamic from "next/dynamic";
 const VoiceMode = dynamic(() => import("./VoiceMode"), { ssr: false });
+
+type RetellMessage = {
+  role: "user" | "agent" | "tool_call_invocation" | "tool_call_result" | "node_transition" | "state_transition";
+  content: string;
+  message_id?: string;
+};
 
 export default function AIConcierge() {
   const [isOpen, setIsOpen] = useState(false);
   const [isVoiceModeActive, setIsVoiceModeActive] = useState(false);
-  
   const [input, setInput] = useState("");
   
-  const { messages, append, isLoading, error } = useChat({
-    id: "henry",
-    initialMessages: [
-      { id: "initial", role: "assistant", content: "Welcome to Redz! I'm Henry, your personal concierge. How can I assist you with reservations or menu questions today?" }
-    ]
-  });
+  const [chatId, setChatId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  const [messages, setMessages] = useState<RetellMessage[]>([
+    { 
+      message_id: "initial", 
+      role: "agent", 
+      content: "Welcome to Redz! I'm Henry, your personal concierge. How can I assist you with reservations or menu questions today?" 
+    }
+  ]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
-    append({ role: 'user', content: input });
+    
+    const userMessage = input.trim();
     setInput("");
+    
+    // Optimistically add user message to UI
+    const newUserMsg: RetellMessage = { role: "user", content: userMessage, message_id: Date.now().toString() };
+    setMessages(prev => [...prev, newUserMsg]);
+    
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userMessage, chatId }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to get a response from Henry");
+      }
+
+      const data = await res.json();
+      
+      if (data.chatId) {
+        setChatId(data.chatId);
+      }
+      
+      if (data.messages && Array.isArray(data.messages)) {
+        setMessages(prev => [...prev, ...data.messages]);
+      }
+    } catch (err: any) {
+      console.error("Chat error:", err);
+      setError(err.message || "Something went wrong.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -33,7 +77,8 @@ export default function AIConcierge() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  console.log("Current messages in AIConcierge:", messages);
+  // Filter out tool calls / internal messages for display
+  const displayMessages = messages.filter(m => m.role === "user" || m.role === "agent");
 
   return (
     <>
@@ -82,16 +127,16 @@ export default function AIConcierge() {
                 </header>
 
                 <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 bg-redz-charcoal/50">
-                  {messages.map((msg: any) => (
-                    <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  {displayMessages.map((msg, index) => (
+                    <div key={msg.message_id || index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[80%] p-3 rounded-2xl text-sm leading-relaxed ${msg.role === 'user' ? 'bg-redz-accent text-redz-charcoal rounded-tr-sm' : 'bg-redz-charcoal-light border border-gray-800 text-gray-200 rounded-tl-sm'}`}>
-                        {msg.content || (msg.parts?.map((part: any) => part.type === 'text' ? part.text : '').join('')) || ''}
+                        {msg.content}
                       </div>
                     </div>
                   ))}
                   {isLoading && (
                     <div className="flex justify-start">
-                      <div className="max-w-[80%] p-3 rounded-2xl bg-redz-charcoal-light border border-gray-800 rounded-tl-sm flex gap-1">
+                      <div className="max-w-[80%] p-3 rounded-2xl bg-redz-charcoal-light border border-gray-800 rounded-tl-sm flex gap-1 items-center h-10">
                         <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                         <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-75"></div>
                         <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150"></div>
@@ -101,7 +146,7 @@ export default function AIConcierge() {
                   {error && (
                     <div className="flex justify-center my-2">
                       <div className="text-xs text-red-400 bg-red-400/10 border border-red-400/20 px-4 py-2 rounded-lg text-center max-w-[90%]">
-                        Henry is currently offline. Please configure your OpenAI API keys to reconnect.
+                        Henry is currently offline. Please try again later.
                       </div>
                     </div>
                   )}
