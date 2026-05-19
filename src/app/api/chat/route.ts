@@ -19,7 +19,7 @@ export async function POST(req: Request) {
 
     // 1. Create a new chat session if we don't have one
     if (!activeChatId) {
-      const agentId = process.env.NEXT_PUBLIC_RETELL_AGENT_ID || "";
+      const agentId = process.env.NEXT_PUBLIC_RETELL_CHAT_AGENT_ID || "agent_e7981ca5ba10842f9d2545d30d";
       if (!agentId) {
         throw new Error("Retell Agent ID is not configured.");
       }
