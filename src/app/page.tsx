@@ -10,11 +10,6 @@ import AIConcierge from "@/components/AIConcierge";
 export default function Home() {
   const { scrollY } = useScroll();
   
-  // Cinematic Video Parallax & Bleed Fade
-  const yBg = useTransform(scrollY, [0, 1000], ["0%", "40%"]);
-  const scaleBg = useTransform(scrollY, [0, 1000], [1, 1.05]); // Slow cinematic zoom
-  const opacityBg = useTransform(scrollY, [0, 1000], [1, 0]); // Fades out completely as you scroll into the next section
-  
   // Cinematic Text Fade & Drop
   const opacityText = useTransform(scrollY, [0, 400], [1, 0]);
   const yText = useTransform(scrollY, [0, 400], ["0px", "150px"]);
@@ -26,10 +21,7 @@ export default function Home() {
 
       {/* Cinematic Parallax Hero */}
       <section className="relative h-[100svh] w-full flex items-center justify-center bg-redz-charcoal pt-[120px]">
-        <motion.div 
-          style={{ y: yBg, scale: scaleBg, opacity: opacityBg }} 
-          className="absolute top-0 inset-x-0 h-[175svh] z-0 transform-gpu origin-center pointer-events-none"
-        >
+        <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
           <video
             autoPlay
             loop
@@ -40,9 +32,8 @@ export default function Home() {
           >
             <source src="/videos/hero-bg-v2.mp4" type="video/mp4" />
           </video>
-          {/* Heavy gradient bleed at the very bottom of the 175vh container to smoothly transition into the charcoal background below */}
-          <div className="absolute inset-0 bg-gradient-to-t from-redz-charcoal via-redz-charcoal/80 to-transparent z-10"></div>
-        </motion.div>
+          <div className="absolute inset-0 bg-gradient-to-t from-redz-charcoal via-redz-charcoal/40 to-transparent z-10"></div>
+        </div>
         
         <motion.div 
           style={{ opacity: opacityText, y: yText, scale: scaleText }}
