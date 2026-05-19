@@ -21,7 +21,7 @@ export default function Home() {
 
       {/* Cinematic Parallax Hero */}
       <section className="relative h-[100svh] w-full flex items-center justify-center bg-redz-charcoal pt-[120px]">
-        <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-[115svh] z-0 overflow-hidden pointer-events-none">
           <video
             autoPlay
             loop
