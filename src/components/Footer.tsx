@@ -9,7 +9,7 @@ export default function Footer() {
       {/* Hotel Booking CTA */}
       <div className="bg-redz-charcoal border-y border-redz-accent/20 py-24 px-6 relative overflow-hidden mb-16 mt-[-1px]">
         <div className="absolute inset-0 z-0">
-          <Image unoptimized src="/images/original/hotel_stay_cta.jpg" alt="DoubleTree Suites Hotel Room" fill className="object-cover opacity-40 mix-blend-luminosity" />
+          <Image src="/images/original/hotel_stay_cta.jpg" alt="DoubleTree Suites Hotel Room" fill className="object-cover opacity-40 mix-blend-luminosity" />
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-redz-charcoal via-redz-charcoal/60 to-redz-charcoal/80 z-0 pointer-events-none" />
         <div className="absolute inset-0 bg-gradient-to-r from-redz-charcoal/50 via-transparent to-redz-charcoal/50 z-0 pointer-events-none" />

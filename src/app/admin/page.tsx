@@ -291,7 +291,7 @@ export default function AdminPage() {
       <div className="min-h-screen bg-redz-charcoal flex">
         {/* Left Side: Image */}
         <div className="hidden lg:block lg:w-1/2 relative">
-          <Image unoptimized src="/images/original/bar-and-lounge-01.jpg" alt="Redz Bar" fill className="object-cover opacity-80" />
+          <Image src="/images/original/bar-and-lounge-01.jpg" alt="Redz Bar" fill className="object-cover opacity-80" />
           <div className="absolute inset-0 bg-gradient-to-r from-transparent to-redz-charcoal"></div>
         </div>
         

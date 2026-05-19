@@ -59,7 +59,7 @@ export default function BreakfastMenuPage() {
 
       <section className="relative h-[40vh] min-h-[350px] w-full pt-[120px]">
         <div className="absolute top-0 inset-x-0 h-[50vh] z-0 pointer-events-none">
-          <Image unoptimized src="/images/original/appetizer-spread-with-beer.jpg" alt="Breakfast Menu" fill className="object-cover opacity-40" priority />
+          <Image src="/images/original/appetizer-spread-with-beer.jpg" alt="Breakfast Menu" fill className="object-cover opacity-40" priority />
           <div className="absolute inset-0 bg-gradient-to-t from-redz-charcoal via-redz-charcoal/80 to-transparent z-10"></div>
         </div>
         

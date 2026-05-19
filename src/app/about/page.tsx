@@ -13,7 +13,7 @@ export default function AboutPage() {
       {/* Hero Banner */}
       <section className="relative h-[50vh] min-h-[450px] w-full mb-16 pt-[120px]">
         <div className="absolute top-0 inset-x-0 h-[75vh] z-0 pointer-events-none">
-          <Image unoptimized src="/images/original/about_hero.jpg" alt="Our Story" fill className="object-cover opacity-60" priority />
+          <Image src="/images/original/about_hero.jpg" alt="Our Story" fill className="object-cover opacity-60" priority />
           <div className="absolute inset-0 bg-gradient-to-t from-redz-charcoal via-redz-charcoal/60 to-transparent z-10"></div>
         </div>
         
@@ -105,10 +105,10 @@ export default function AboutPage() {
           >
             <div className="relative h-[400px] w-full overflow-hidden">
               <Image 
-                src="/images/staff/lead_bartender.png" 
+                src="/images/original/hero-bartender.png" 
                 alt="Lead Mixologist Wayne" 
                 fill 
-                className="object-cover group-hover:scale-105 transition-transform duration-700"
+                className="object-cover object-top group-hover:scale-105 transition-transform duration-700"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-transparent to-transparent opacity-80" />
             </div>

@@ -14,7 +14,7 @@ export default function MenusPage() {
       {/* Hero Banner */}
       <section className="relative h-[50vh] min-h-[450px] w-full mb-16 pt-[120px]">
         <div className="absolute top-0 inset-x-0 h-[75vh] z-0 pointer-events-none">
-          <Image unoptimized src="/images/original/premium_menu_hero.jpg" alt="Our Menus" fill className="object-cover opacity-60" priority />
+          <Image src="/images/original/premium_menu_hero.jpg" alt="Our Menus" fill className="object-cover opacity-60" priority />
           <div className="absolute inset-0 bg-gradient-to-t from-redz-charcoal via-redz-charcoal/60 to-transparent z-10"></div>
         </div>
         
@@ -58,7 +58,7 @@ export default function MenusPage() {
             transition={{ delay: 0.3 }}
             className="relative h-[400px] rounded-2xl overflow-hidden group block"
           >
-            <Image unoptimized src="/images/original/prime-rib.jpg" alt="Dinner" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+            <Image src="/images/original/prime-rib.jpg" alt="Dinner" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
             <div className="absolute inset-0 bg-gradient-to-t from-redz-charcoal via-redz-charcoal/40 to-transparent flex flex-col justify-end p-8">
               <h2 className="text-4xl font-serif text-redz-accent mb-2">Dinner</h2>
               <p className="text-gray-200 mb-4">Authentic specialties from all over the country. Mon-Sat 4:00pm - 10:00pm.</p>
@@ -77,8 +77,7 @@ export default function MenusPage() {
             transition={{ delay: 0.4 }}
             className="relative h-[400px] rounded-2xl overflow-hidden group block"
           >
-            <Image unoptimized 
-              src="/images/original/craft-cocktails.jpg" 
+            <Image src="/images/original/craft-cocktails.jpg" 
               alt="Happy Hour" 
               fill 
               quality={100}
@@ -103,7 +102,7 @@ export default function MenusPage() {
             className="relative rounded-2xl overflow-hidden group bg-gradient-to-br from-redz-charcoal-light to-black/40 border border-white/10 p-12 flex flex-col md:flex-row justify-between items-center"
           >
             <div className="absolute inset-0 z-0">
-              <Image unoptimized src="/images/original/appetizer-spread-with-beer.jpg" alt="Breakfast Background" fill className="object-cover opacity-20 transition-transform duration-700 group-hover:scale-105" />
+              <Image src="/images/original/appetizer-spread-with-beer.jpg" alt="Breakfast Background" fill className="object-cover opacity-20 transition-transform duration-700 group-hover:scale-105" />
             </div>
             <div className="relative z-10 max-w-xl text-center md:text-left mb-6 md:mb-0">
               <h2 className="text-4xl font-serif text-redz-accent mb-4">Breakfast</h2>

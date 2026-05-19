@@ -32,6 +32,7 @@ export default function Home() {
         >
           <video
             autoPlay
+            loop
             muted
             playsInline
             poster="/images/original/hero-bg-v2-poster.jpg"
@@ -79,7 +80,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="md:col-span-2 md:row-span-2 relative rounded-2xl overflow-hidden group"
           >
-            <Image unoptimized src="/images/bone-in-rib-eye-hq.png" alt="Signature Dish" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+            <Image src="/images/bone-in-rib-eye-hq.png" alt="Signature Dish" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
             <div className="absolute inset-0 bg-gradient-to-t from-redz-charcoal via-redz-charcoal/40 to-transparent flex flex-col justify-end p-8">
               <h3 className="text-3xl font-serif text-redz-accent mb-2">Signature Fare</h3>
               <p className="text-gray-200 max-w-md">Indulge in our house-made Kobe beef meatballs, crispy tempura butternut squash, and bacon-wrapped jumbo shrimp.</p>
@@ -110,7 +111,7 @@ export default function Home() {
             transition={{ delay: 0.2 }}
             className="relative rounded-2xl overflow-hidden group"
           >
-            <Image unoptimized 
+            <Image 
               src="/images/original/craft-cocktails.jpg" 
               alt="Craft Pairings" 
               fill 
@@ -129,7 +130,7 @@ export default function Home() {
       <section id="banquets" className="relative py-32 border-y border-white/5 overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0 z-0 pointer-events-none">
-          <Image unoptimized src="/images/ballroom-bqt1-optimized.jpg" alt="Falls Grand Ballroom" fill className="object-cover opacity-60" priority />
+          <Image src="/images/ballroom-bqt1-optimized.jpg" alt="Falls Grand Ballroom" fill className="object-cover opacity-60" priority />
           <div className="absolute inset-0 bg-redz-charcoal/80 mix-blend-multiply"></div>
           <div className="absolute inset-0 bg-gradient-to-t from-redz-charcoal via-redz-charcoal/40 to-redz-charcoal"></div>
         </div>

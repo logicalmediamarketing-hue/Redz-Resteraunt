@@ -14,7 +14,7 @@ export default function BanquetsPage() {
       {/* Hero Banner */}
       <section className="relative h-[50vh] min-h-[450px] w-full mb-16 pt-[120px]">
         <div className="absolute top-0 inset-x-0 h-[75vh] z-0 pointer-events-none">
-          <Image unoptimized src="/images/download-1-hq.png" alt="Falls Grand Ballroom" fill className="object-cover opacity-60" priority />
+          <Image src="/images/download-1-hq.png" alt="Falls Grand Ballroom" fill className="object-cover opacity-60" priority />
           <div className="absolute inset-0 bg-gradient-to-t from-redz-charcoal via-redz-charcoal/60 to-transparent z-10"></div>
         </div>
         
