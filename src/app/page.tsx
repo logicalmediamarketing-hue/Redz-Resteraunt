@@ -21,7 +21,7 @@ export default function Home() {
 
       {/* Cinematic Parallax Hero */}
       <section className="relative h-[100svh] w-full flex items-center justify-center bg-redz-charcoal pt-[120px]">
-        <div className="absolute top-0 left-0 w-full h-[115svh] z-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-0 w-full h-[140svh] z-0 overflow-hidden pointer-events-none">
           <video
             autoPlay
             loop
@@ -32,7 +32,9 @@ export default function Home() {
           >
             <source src="/videos/hero-bg-v2.mp4" type="video/mp4" />
           </video>
-          <div className="absolute inset-0 bg-gradient-to-t from-redz-charcoal via-redz-charcoal/40 to-transparent z-10"></div>
+          {/* Gradient to smoothly blend the extended video into the background color */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-redz-charcoal z-10"></div>
+          <div className="absolute inset-0 bg-redz-charcoal/20 z-10"></div>
         </div>
         
         <motion.div 
