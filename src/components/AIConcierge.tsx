@@ -13,23 +13,17 @@ export default function AIConcierge() {
   
   const [input, setInput] = useState("");
   
-  // @ts-expect-error - ignore typing issues for AI SDK
-  const { messages, sendMessage, status, error } = useChat({
+  const { messages, append, isLoading, error } = useChat({
     id: "henry",
     initialMessages: [
       { id: "initial", role: "assistant", content: "Welcome to Redz! I'm Henry, your personal concierge. How can I assist you with reservations or menu questions today?" }
-    ],
-    messages: [
-      { id: "initial", role: "assistant", content: "Welcome to Redz! I'm Henry, your personal concierge. How can I assist you with reservations or menu questions today?" }
     ]
-  } as any);
-
-  const isLoading = status === 'submitted' || status === 'streaming';
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
-    sendMessage({ text: input });
+    append({ role: 'user', content: input });
     setInput("");
   };
 
