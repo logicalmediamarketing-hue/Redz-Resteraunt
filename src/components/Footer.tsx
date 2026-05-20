@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { MapPin, Phone, Mail } from "lucide-react";
+import { MapPin, Phone, Mail, Instagram, Facebook } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -62,6 +62,14 @@ export default function Footer() {
             <li className="flex items-center gap-3">
               <Phone className="text-redz-accent shrink-0" size={20} />
               <a href="tel:18563806045" className="hover:text-white transition-colors">856.380.6045</a>
+            </li>
+            <li className="flex items-center gap-4 pt-2">
+              <a href="https://www.instagram.com/redzrestaurant/" target="_blank" rel="noopener noreferrer" className="hover:text-redz-accent transition-colors" aria-label="Instagram">
+                <Instagram size={24} />
+              </a>
+              <a href="https://www.facebook.com/RedzRestaurant/" target="_blank" rel="noopener noreferrer" className="hover:text-redz-accent transition-colors" aria-label="Facebook">
+                <Facebook size={24} />
+              </a>
             </li>
           </ul>
         </div>
