@@ -58,7 +58,7 @@ export default function MenusPage() {
             transition={{ delay: 0.3 }}
             className="relative h-[400px] rounded-2xl overflow-hidden group block"
           >
-            <Image src="/images/original/prime-rib.jpg" alt="Dinner" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+            <Image src="/images/original/premium_dinner_hero.jpg" alt="Dinner" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
             <div className="absolute inset-0 bg-gradient-to-t from-redz-charcoal via-redz-charcoal/40 to-transparent flex flex-col justify-end p-8">
               <h2 className="text-4xl font-serif text-redz-accent mb-2">Dinner</h2>
               <p className="text-gray-200 mb-4">Authentic specialties from all over the country. Mon-Sat 4:00pm - 10:00pm.</p>
