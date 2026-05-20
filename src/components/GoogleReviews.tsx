@@ -50,7 +50,7 @@ export default function GoogleReviews() {
                   <Star key={i} size={20} fill="currentColor" className="text-yellow-400" />
                 ))}
               </div>
-              <span className="text-white font-bold text-lg">4.1</span>
+              <span className="text-white font-bold text-lg">4.6</span>
             </div>
             <h2 className="text-4xl md:text-5xl font-serif text-white">What Our Guests Say</h2>
           </div>
