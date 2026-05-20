@@ -2,16 +2,16 @@ import Link from "next/link";
 import Image from "next/image";
 import { MapPin, Phone, Mail } from "lucide-react";
 
-const InstagramIcon = ({ size = 24 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const InstagramIcon = ({ size = 24, className }: { size?: number, className?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
     <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
     <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
   </svg>
 );
 
-const FacebookIcon = ({ size = 24 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const FacebookIcon = ({ size = 24, className }: { size?: number, className?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3.81l.39-4h-4.2V7a1 1 0 0 1 1-1h3z"></path>
   </svg>
 );
@@ -77,12 +77,16 @@ export default function Footer() {
               <Phone className="text-redz-accent shrink-0" size={20} />
               <a href="tel:18563806045" className="hover:text-white transition-colors">856.380.6045</a>
             </li>
-            <li className="flex items-center gap-4 pt-2">
-              <a href="https://www.instagram.com/redzrestaurant/" target="_blank" rel="noopener noreferrer" className="hover:text-redz-accent transition-colors" aria-label="Instagram">
-                <InstagramIcon size={24} />
+            <li className="flex items-center gap-3 pt-2">
+              <InstagramIcon size={20} className="text-redz-accent shrink-0" />
+              <a href="https://www.instagram.com/redzrestaurant/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                @redzrestaurant
               </a>
-              <a href="https://www.facebook.com/RedzRestaurant/" target="_blank" rel="noopener noreferrer" className="hover:text-redz-accent transition-colors" aria-label="Facebook">
-                <FacebookIcon size={24} />
+            </li>
+            <li className="flex items-center gap-3">
+              <FacebookIcon size={20} className="text-redz-accent shrink-0" />
+              <a href="https://www.facebook.com/RedzRestaurant/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                @RedzRestaurant
               </a>
             </li>
           </ul>
