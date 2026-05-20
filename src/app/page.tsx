@@ -6,6 +6,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AIConcierge from "@/components/AIConcierge";
+import GoogleReviews from "@/components/GoogleReviews";
 
 export default function Home() {
   const { scrollY } = useScroll();
@@ -118,6 +119,9 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+
+      {/* Google Reviews */}
+      <GoogleReviews />
 
       {/* Banquets Callout */}
       <section id="banquets" className="relative py-32 border-y border-white/5 overflow-hidden">
