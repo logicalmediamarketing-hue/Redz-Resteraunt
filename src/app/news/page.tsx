@@ -14,7 +14,7 @@ export default function NewsEventsPage() {
       img: "/images/original/thursday_wine_special.jpg"
     },
     {
-      title: "Fun After Four",
+      title: "spirits after 4",
       time: "Monday - Thursday | 4:00pm - 6:00pm",
       desc: "Join us for our legendary happy hour with discounted drinks and appetizers at the bar.",
       img: "/images/original/craft-cocktails.jpg"
