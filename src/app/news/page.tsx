@@ -23,7 +23,7 @@ export default function NewsEventsPage() {
       title: "It's Back! The 28 oz. Bone-in-Rib Eye",
       time: "Available Daily",
       desc: "For the meat lovers out there, this will satisfy any appetite. Ask your server for details.",
-      img: "/images/bone-in-rib-eye-hq.png"
+      img: "/images/bone-in-rib-eye-hq.jpg"
     }
   ];
 
