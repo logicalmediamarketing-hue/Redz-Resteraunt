@@ -98,12 +98,12 @@ export default function NewsEventsPage() {
           
           <div className="space-y-8">
             <blockquote className="border-l-4 border-redz-accent pl-6 text-left">
-              <p className="text-xl text-gray-300 italic mb-4">"Excellent service! The food was exceptional. Overall great evening with friends!!"</p>
+              <p className="text-xl text-gray-300 italic mb-4">&quot;Excellent service! The food was exceptional. Overall great evening with friends!!&quot;</p>
               <footer className="text-redz-accent font-bold uppercase tracking-wider text-sm">- Murrman, Philadelphia</footer>
             </blockquote>
             
             <blockquote className="border-l-4 border-redz-accent pl-6 text-left">
-              <p className="text-xl text-gray-300 italic mb-4">"Great service and food as usual. Thanks for making my friend's birthday lunch really nice!"</p>
+              <p className="text-xl text-gray-300 italic mb-4">&quot;Great service and food as usual. Thanks for making my friend&apos;s birthday lunch really nice!&quot;</p>
               <footer className="text-redz-accent font-bold uppercase tracking-wider text-sm">- OpenTable Diner, Philadelphia</footer>
             </blockquote>
           </div>

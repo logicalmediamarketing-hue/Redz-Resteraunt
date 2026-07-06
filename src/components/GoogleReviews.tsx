@@ -94,7 +94,7 @@ export default function GoogleReviews() {
               </div>
               
               <p className="text-gray-300 leading-relaxed flex-grow">
-                "{review.text}"
+                &quot;{review.text}&quot;
               </p>
             </motion.div>
           ))}

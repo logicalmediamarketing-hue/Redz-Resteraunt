@@ -34,9 +34,7 @@ export default function AdminPage() {
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLogin, setIsLogin] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [authSuccess, setAuthSuccess] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(false);
 
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -83,12 +81,6 @@ export default function AdminPage() {
     return () => subscription.unsubscribe();
   }, []);
 
-  useEffect(() => {
-    if (user) {
-      fetchReservations();
-    }
-  }, [user]);
-
   const fetchReservations = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -104,24 +96,23 @@ export default function AdminPage() {
     setLoading(false);
   };
 
+  useEffect(() => {
+    if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data fetch on auth change
+      fetchReservations();
+    }
+     
+  }, [user]);
+
+  // Sign-in only: staff accounts are provisioned by the owner in the Supabase dashboard
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
-    setAuthSuccess(null);
     setAuthLoading(true);
-    
-    if (isLogin) {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) setAuthError(error.message);
-    } else {
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) {
-        setAuthError(error.message);
-      } else {
-        setAuthSuccess("Account created! You can now sign in.");
-        setIsLogin(true);
-      }
-    }
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) setAuthError(error.message);
+
     setAuthLoading(false);
   };
 
@@ -310,13 +301,6 @@ export default function AdminPage() {
               </div>
             )}
 
-            {authSuccess && (
-              <div className="bg-green-500/10 border border-green-500/50 text-green-400 px-4 py-3 rounded-lg mb-6 flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 mt-0.5 shrink-0" />
-                <p className="text-sm">{authSuccess}</p>
-              </div>
-            )}
-
             <form onSubmit={handleAuth} className="space-y-5">
               <div>
                 <label className="block text-gray-300 text-sm font-medium mb-1.5">Email Address</label>
@@ -339,19 +323,9 @@ export default function AdminPage() {
                 disabled={authLoading}
                 className="w-full bg-redz-accent text-redz-charcoal font-bold py-3.5 rounded-lg mt-2 hover:bg-white transition-colors disabled:opacity-50"
               >
-                {authLoading ? "Authenticating..." : (isLogin ? "Access Portal" : "Create Account")}
+                {authLoading ? "Authenticating..." : "Access Portal"}
               </button>
             </form>
-            
-            <div className="mt-8 text-center lg:text-left">
-              <button 
-                type="button"
-                onClick={() => { setIsLogin(!isLogin); setAuthError(null); setAuthSuccess(null); }} 
-                className="text-gray-500 text-sm hover:text-white transition-colors"
-              >
-                {isLogin ? "Need access? Create an account" : "Return to secure login"}
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -462,7 +436,7 @@ export default function AdminPage() {
           <div className="bg-redz-charcoal-light border border-white/5 p-6 rounded-2xl">
             <div className="flex items-center gap-3 text-gray-400 mb-2">
               <Users className="w-5 h-5 text-blue-400" />
-              <h3 className="text-sm font-medium uppercase tracking-wider">Today's Guests</h3>
+              <h3 className="text-sm font-medium uppercase tracking-wider">Today&apos;s Guests</h3>
             </div>
             <p className="text-4xl font-serif text-white">{stats.todayGuests}</p>
           </div>
@@ -632,7 +606,7 @@ export default function AdminPage() {
                           const resDate = parseISO(res.date);
                           isResToday = isValid(resDate) && isToday(resDate);
                           displayDate = isValid(resDate) ? format(resDate, "MMM d, yyyy") : res.date;
-                        } catch (e) {
+                        } catch {
                           // Fallback
                         }
 

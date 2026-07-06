@@ -9,10 +9,39 @@ import { MapPin, Phone, Clock, CheckCircle2 } from "lucide-react";
 
 export default function ContactPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitted(true);
+    setSubmitError(null);
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: `${firstName} ${lastName}`.trim(),
+          email,
+          message
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error("Request failed");
+      }
+
+      setIsSubmitted(true);
+    } catch {
+      setSubmitError("Something went wrong sending your message. Please try again or call us at 856.380.6045.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -70,23 +99,26 @@ export default function ContactPage() {
                 <div className="grid grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm text-gray-400 mb-2">First Name</label>
-                    <input required type="text" className="w-full bg-redz-charcoal border border-gray-800 rounded p-3 focus:outline-none focus:border-redz-accent text-white" />
+                    <input required type="text" maxLength={60} value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full bg-redz-charcoal border border-gray-800 rounded p-3 focus:outline-none focus:border-redz-accent text-white" />
                   </div>
                   <div>
                     <label className="block text-sm text-gray-400 mb-2">Last Name</label>
-                    <input required type="text" className="w-full bg-redz-charcoal border border-gray-800 rounded p-3 focus:outline-none focus:border-redz-accent text-white" />
+                    <input required type="text" maxLength={60} value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full bg-redz-charcoal border border-gray-800 rounded p-3 focus:outline-none focus:border-redz-accent text-white" />
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">Email Address</label>
-                  <input required type="email" className="w-full bg-redz-charcoal border border-gray-800 rounded p-3 focus:outline-none focus:border-redz-accent text-white" />
+                  <input required type="email" maxLength={254} value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-redz-charcoal border border-gray-800 rounded p-3 focus:outline-none focus:border-redz-accent text-white" />
                 </div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">Message</label>
-                  <textarea required rows={5} className="w-full bg-redz-charcoal border border-gray-800 rounded p-3 focus:outline-none focus:border-redz-accent text-white resize-none"></textarea>
+                  <textarea required rows={5} maxLength={2000} value={message} onChange={(e) => setMessage(e.target.value)} className="w-full bg-redz-charcoal border border-gray-800 rounded p-3 focus:outline-none focus:border-redz-accent text-white resize-none"></textarea>
                 </div>
-                <button type="submit" className="w-full bg-redz-accent text-white py-4 rounded font-bold hover:bg-white hover:text-redz-charcoal transition-colors">
-                  Send Message
+                {submitError && (
+                  <p className="text-sm text-red-400 bg-red-400/10 border border-red-400/20 rounded p-3">{submitError}</p>
+                )}
+                <button type="submit" disabled={isSubmitting} className="w-full bg-redz-accent text-white py-4 rounded font-bold hover:bg-white hover:text-redz-charcoal transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                  {isSubmitting ? "Sending..." : "Send Message"}
                 </button>
               </form>
             )}

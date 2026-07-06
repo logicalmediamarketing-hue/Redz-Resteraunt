@@ -44,7 +44,7 @@ export default function MenusPage() {
           transition={{ delay: 0.2 }}
           className="text-xl text-gray-300 leading-relaxed"
         >
-          Whether you're enjoying a relaxed lunch, a memorable dinner, or a casual bite in the bar, you'll appreciate our chef's passionate attention to detail.
+          Whether you&apos;re enjoying a relaxed lunch, a memorable dinner, or a casual bite in the bar, you&apos;ll appreciate our chef&apos;s passionate attention to detail.
         </motion.p>
       </section>
 

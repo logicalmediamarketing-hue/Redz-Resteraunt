@@ -43,7 +43,8 @@ export default function ReservationsPage() {
           date: formData.date,
           time: formData.time,
           party_size: parseInt(formData.party_size),
-          special_requests: formData.special_requests
+          special_requests: formData.special_requests,
+          status: 'pending'
         }
       ]);
 

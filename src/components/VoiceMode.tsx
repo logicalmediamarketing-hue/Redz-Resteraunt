@@ -8,16 +8,50 @@ import Image from "next/image";
 
 interface VoiceModeProps {
   onClose: () => void;
-  agentId: string;
 }
 
-export default function VoiceMode({ onClose, agentId }: VoiceModeProps) {
+export default function VoiceMode({ onClose }: VoiceModeProps) {
   const [isCalling, setIsCalling] = useState(false);
   const [isAgentSpeaking, setIsAgentSpeaking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   
   const retellWebClientRef = useRef<RetellWebClient | null>(null);
+  const isMountedRef = useRef(true);
+
+  const startCall = async () => {
+    try {
+      // Get token from our secure backend (agent is configured server-side)
+      const response = await fetch("/api/retell", {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to get access token");
+      }
+
+      const data = await response.json();
+
+      // The user may have closed the panel while the token fetch was in flight —
+      // never open the microphone after unmount
+      if (!isMountedRef.current) return;
+
+      // Start WebRTC connection
+      if (retellWebClientRef.current) {
+        await retellWebClientRef.current.startCall({
+          accessToken: data.accessToken,
+        });
+        if (!isMountedRef.current) {
+          retellWebClientRef.current.stopCall();
+        }
+      }
+    } catch (err) {
+      console.error("Failed to start call:", err);
+      if (isMountedRef.current) {
+        setError("Voice calling is temporarily unavailable. Please use the chat instead, or call 856-380-6045.");
+      }
+    }
+  };
 
   useEffect(() => {
     retellWebClientRef.current = new RetellWebClient();
@@ -42,48 +76,24 @@ export default function VoiceMode({ onClose, agentId }: VoiceModeProps) {
       setIsAgentSpeaking(false);
     });
 
-    retellWebClientRef.current.on("error", (err: any) => {
+    retellWebClientRef.current.on("error", (err: unknown) => {
       console.error("Retell error:", err);
       setError("An error occurred during the call.");
       setIsCalling(false);
     });
 
     // Start the call automatically when the component mounts
+     
     startCall();
 
     return () => {
+      isMountedRef.current = false;
       if (retellWebClientRef.current) {
         retellWebClientRef.current.stopCall();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const startCall = async () => {
-    try {
-      // Get token from our secure backend
-      const response = await fetch("/api/retell", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ agentId }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to get access token");
-      }
-
-      const data = await response.json();
-      
-      // Start WebRTC connection
-      if (retellWebClientRef.current) {
-        await retellWebClientRef.current.startCall({
-          accessToken: data.accessToken,
-        });
-      }
-    } catch (err) {
-      console.error("Failed to start call:", err);
-      setError("Could not connect to Henry. Please check your Agent ID and API Key.");
-    }
-  };
 
   const endCall = () => {
     if (retellWebClientRef.current) {
@@ -92,8 +102,16 @@ export default function VoiceMode({ onClose, agentId }: VoiceModeProps) {
     onClose();
   };
 
-  // Toggle mute (we'd ideally control the user mic track, but stopping the WebRTC call stops everything)
-  // For visual sake, we track the state. Real mic muting would require tracking the local audio stream.
+  const toggleMute = () => {
+    const client = retellWebClientRef.current;
+    if (!client) return;
+    if (isMuted) {
+      client.unmute();
+    } else {
+      client.mute();
+    }
+    setIsMuted(!isMuted);
+  };
 
   return (
     <div className="absolute inset-0 bg-redz-charcoal z-50 flex flex-col items-center justify-between py-12">
@@ -168,8 +186,8 @@ export default function VoiceMode({ onClose, agentId }: VoiceModeProps) {
 
       {/* Controls */}
       <div className="flex items-center gap-8 mb-4">
-        <button 
-          onClick={() => setIsMuted(!isMuted)}
+        <button
+          onClick={toggleMute}
           className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
             isMuted ? "bg-white text-redz-charcoal" : "bg-redz-charcoal-light border border-gray-700 text-white hover:bg-gray-800"
           }`}

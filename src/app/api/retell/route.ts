@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import Retell from "retell-sdk";
+import { sameOriginOk, rateLimitOk, forbiddenResponse, rateLimitedResponse } from "@/lib/security";
 
 // Initialize the Retell SDK with the API key from environment variables
 const retell = new Retell({
@@ -8,12 +9,17 @@ const retell = new Retell({
 
 export async function POST(req: Request) {
   try {
-    const { agentId } = await req.json();
+    // Each token consumes billable Retell minutes — gate token minting
+    if (!sameOriginOk(req)) return forbiddenResponse();
+    if (!rateLimitOk(req, 'retell', 10)) return rateLimitedResponse();
 
-    if (!agentId) {
+    // Agent ID is resolved server-side only — clients cannot mint calls for arbitrary agents
+    const agentId = process.env.RETELL_AGENT_ID || process.env.NEXT_PUBLIC_RETELL_AGENT_ID;
+
+    if (!process.env.RETELL_API_KEY || !agentId) {
       return NextResponse.json(
-        { error: "Agent ID is required" },
-        { status: 400 }
+        { error: "Voice concierge is not configured" },
+        { status: 503 }
       );
     }
 
@@ -26,7 +32,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       accessToken: callResponse.access_token,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error creating Retell WebRTC call:", error);
     return NextResponse.json(
       { error: "Failed to initialize call" },

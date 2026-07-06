@@ -44,8 +44,8 @@ export default function AboutPage() {
           className="text-xl text-gray-300 space-y-6 leading-relaxed"
         >
           <p>Located at the DoubleTree Suites by Hilton Hotel Mt Laurel, Redz Restaurant & Bar serves authentic specialties from all over the country.</p>
-          <p>We are known for our carefully chosen and locally sourced in-season ingredients, with an imaginative approach to many of the foods you know and love—as well as many others you'll be delighted to discover.</p>
-          <p>Bringing over three decades of global experience to Redz's kitchen, our chefs invite you to join us for lunch, dinner, and casual fare throughout the day and evening.</p>
+          <p>We are known for our carefully chosen and locally sourced in-season ingredients, with an imaginative approach to many of the foods you know and love—as well as many others you&apos;ll be delighted to discover.</p>
+          <p>Bringing over three decades of global experience to Redz&apos;s kitchen, our chefs invite you to join us for lunch, dinner, and casual fare throughout the day and evening.</p>
         </motion.div>
       </section>
 
@@ -105,7 +105,7 @@ export default function AboutPage() {
           >
             <div className="relative h-[400px] w-full overflow-hidden">
               <Image 
-                src="/images/original/hero-bartender.png" 
+                src="/images/original/hero-bartender.jpg"
                 alt="Lead Mixologist Wayne" 
                 fill 
                 className="object-cover object-top group-hover:scale-105 transition-transform duration-700"
@@ -116,7 +116,7 @@ export default function AboutPage() {
               <h3 className="text-2xl font-serif text-white mb-1">Wayne</h3>
               <p className="text-redz-accent uppercase tracking-widest text-xs font-semibold mb-4">Lead Mixologist</p>
               <p className="text-gray-400 text-sm leading-relaxed">
-                Wayne's approach to mixology blends classic techniques with modern innovation, curating an award-winning selection of craft cocktails and premium pairings for our guests.
+                Wayne&apos;s approach to mixology blends classic techniques with modern innovation, curating an award-winning selection of craft cocktails and premium pairings for our guests.
               </p>
             </div>
           </motion.div>
