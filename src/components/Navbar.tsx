@@ -26,8 +26,21 @@ export default function Navbar() {
         </a>
       </div>
       <div className={`max-w-7xl mx-auto px-6 flex justify-between items-center transition-all duration-300 ${isScrolled ? "py-4" : "py-6"}`}>
-        <Link href="/" className="flex items-center gap-2">
-          <Image src="/images/original/logo-v2.png" alt="Redz Restaurant Logo" width={120} height={85} className="object-contain" priority />
+        <Link href="/" className="flex flex-col items-center" aria-label="Redz Restaurant home">
+          <span className="block w-[150px]" aria-hidden="true">
+            <Image
+              src="/images/original/logo-mark-hires.png"
+              alt=""
+              width={536}
+              height={332}
+              sizes="150px"
+              className="h-auto w-[150px] max-w-none"
+              priority
+            />
+          </span>
+          <span className="mt-1.5 whitespace-nowrap text-[11px] font-bold uppercase leading-none tracking-[0.1em] text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+            Inspired American Fare
+          </span>
         </Link>
         
         <div className="hidden md:flex space-x-8 text-white font-medium">
