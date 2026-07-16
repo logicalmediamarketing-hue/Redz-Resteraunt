@@ -1,36 +1,52 @@
 # DNS cutover — put the NEW site on redzrestaurant.com
 
-**Current state (verified):**
-- `redzrestaurant.com` DNS → `159.135.35.210` (Rackspace / Microsoft-IIS) = **old ASP.NET site**
-- Nameservers → `ns.rackspace.com` / `ns2.rackspace.com`
-- New Next.js app is live at https://redz-restaurant.vercel.app and already aliased in Vercel to `redzrestaurant.com`
+**Current state:**
+- Registrar: **GoDaddy**
+- Authoritative NS: `ns33.domaincontrol.com` / `ns34.domaincontrol.com`
+- Apex currently points at Amazon/GoDaddy parking (`3.33.130.190`, `15.197.148.33`) — **not** Vercel
+- New app is live: https://redz-restaurant.vercel.app (already aliased in Vercel)
 
-Until DNS points at Vercel, guests still see the old site on the custom domain.
+## Fastest path (API) — paste keys to the agent
 
-## Option A (recommended) — A records at Rackspace DNS
+1. GoDaddy → https://developer.godaddy.com/keys → **Create New API Key** → **Production**
+2. Copy **Key** + **Secret**
+3. Paste them in chat (or run locally):
 
-Wherever this zone is edited (Rackspace Cloud DNS, or GoDaddy if they proxy to Rackspace):
+```bash
+export GODADDY_API_KEY='...'
+export GODADDY_API_SECRET='...'
+node tools/godaddy-point-to-vercel.mjs
+```
 
-| Type | Host | Value | TTL |
+That sets:
+
+| Type | Host | Value |
+|---|---|---|
+| `A` | `@` | `76.76.21.21` |
+| `A` | `www` | `76.76.21.21` |
+
+## Manual path (GoDaddy UI) — 2 minutes
+
+1. https://dcc.godaddy.com/control/portfolio  
+2. Open **redzrestaurant.com** → **DNS**  
+3. Delete parking / old **A** / **CNAME** for `@` and `www`  
+4. Add:
+
+| Type | Name | Value | TTL |
 |---|---|---|---|
-| `A` | `@` / apex | `76.76.21.21` | 300 |
-| `A` | `www` | `76.76.21.21` | 300 |
+| `A` | `@` | `76.76.21.21` | 600 |
+| `A` | `www` | `76.76.21.21` | 600 |
 
-Remove / replace any old A/CNAME that points `@` or `www` to `159.135.35.210`.
-
-## Option B — Vercel nameservers
-
-At the registrar, set NS to:
-- `ns1.vercel-dns.com`
-- `ns2.vercel-dns.com`
+5. Save. Wait 5–30 minutes.
 
 ## After DNS
 
-1. Wait for propagation (often 5–60 minutes; up to 48h).
-2. Vercel → Domains → `redzrestaurant.com` shows **Valid** + SSL.
-3. Confirm: `curl -I https://redzrestaurant.com` shows `server: Vercel` (not `Microsoft-IIS`).
-4. In Resend → Domains → add/verify `redzrestaurant.com` so `info@redzrestaurant.com` can send.
+1. Vercel → Domains → green / Valid + SSL  
+2. `curl -I https://redzrestaurant.com` shows `server: Vercel`  
+3. Resend → Domains → verify `redzrestaurant.com` for `info@…` email  
 
-## Resend DNS (email)
+## CRM admin
 
-In Resend dashboard → Domains → Add `redzrestaurant.com` → copy the TXT/MX/CNAME records into the same DNS zone as above.
+Created for `marketing@laurellodging.com`. Password is in local gitignored file  
+`.admin-credentials.local` (change after first login).  
+Sign-in: https://redz-restaurant.vercel.app/admin
