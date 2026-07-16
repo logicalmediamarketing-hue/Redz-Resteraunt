@@ -2,7 +2,7 @@
 
 ## Goal
 
-Replace red public-facing buttons and action links with a clearer, more polished cool-white system while retaining Redz red as a distinctive brand accent.
+Replace red public-facing buttons and action links with a polished glassmorphic-white system while retaining Redz red as a distinctive brand accent.
 
 ## Scope
 
@@ -10,8 +10,10 @@ Apply the redesign to public pages and shared public components. Do not restyle 
 
 ## Visual System
 
-- Primary actions: crisp cool white (`bg-slate-50`) with charcoal text, a soft white border, subtle shadow, and a brighter white hover state.
-- Secondary actions: transparent or lightly frosted white surfaces with restrained white borders and a more visible frosted hover state.
+- Primary actions: balanced frosted-white glass with a translucent white surface, white text, `backdrop-blur-xl`, a luminous border, an inset top highlight, and a soft white outer glow.
+- Primary hover state: slightly brighter glass, a stronger border, and a gently elevated glow without becoming opaque.
+- Secondary actions: quieter transparent glass with restrained white borders, white text, moderate blur, and a more visible frosted hover state.
+- Circular concierge controls use the same balanced primary-glass treatment.
 - Quiet text actions: cool gray text that transitions to white on hover.
 - Icon controls: cool gray or white icons with subtle white surface feedback.
 - Disabled actions: reduced opacity and a disabled cursor.
@@ -21,6 +23,7 @@ Apply the redesign to public pages and shared public components. Do not restyle 
 
 - Preserve existing links, form behavior, loading states, and responsive layouts.
 - Maintain strong contrast on charcoal backgrounds.
+- Keep text white on glass surfaces so labels remain legible over photography and dark panels.
 - Keep hover and focus feedback visible without adding distracting animation.
 - Preserve button hierarchy so primary actions remain more prominent than secondary actions.
 
