@@ -11,12 +11,18 @@ const registerSchema = z.object({
   email: z.string().trim().email().max(254),
   password: z.string().min(8).max(128),
   full_name: z.string().trim().min(1).max(120).optional(),
-  invite_code: z.string().trim().min(4).max(64).optional(),
 });
 
+type RegisterResult = {
+  success?: boolean;
+  error?: string;
+  user?: { id: string; email: string };
+  message?: string;
+};
+
 /**
- * Create a CRM staff account for an allowlisted email.
- * Order: invite RPC (no service role) → service-role Admin API → clear error.
+ * Create a CRM staff account for an allowlisted email (no invite code).
+ * Order: allowlist RPC → service-role Admin API.
  */
 export async function POST(req: Request) {
   try {
@@ -26,7 +32,7 @@ export async function POST(req: Request) {
     const parsed = registerSchema.safeParse(await req.json());
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Provide a valid email, invite code, and a password of at least 8 characters." },
+        { error: "Provide a valid email and a password of at least 8 characters." },
         { status: 400 }
       );
     }
@@ -36,58 +42,51 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           error:
-            "This email is not authorized for CRM access. Ask the owner to add it to NEXT_PUBLIC_ADMIN_EMAILS, then send an invite from the CRM.",
+            "This email is not authorized for CRM access. Ask the owner to add it to NEXT_PUBLIC_ADMIN_EMAILS.",
         },
         { status: 403 }
       );
     }
 
-    // 1) Preferred: invite-code RPC (works without SUPABASE_SERVICE_ROLE_KEY)
-    if (parsed.data.invite_code) {
-      const { data, error } = await supabase.rpc("register_staff_from_invite", {
-        p_email: email,
-        p_password: parsed.data.password,
-        p_code: parsed.data.invite_code.trim(),
-        p_full_name: parsed.data.full_name || "",
-      });
+    // 1) Allowlist RPC (works without SUPABASE_SERVICE_ROLE_KEY)
+    const { data, error } = await supabase.rpc("register_staff_account", {
+      p_email: email,
+      p_password: parsed.data.password,
+      p_full_name: parsed.data.full_name || "",
+    });
 
-      if (error) {
-        console.error("register_staff_from_invite RPC error:", error);
-        return NextResponse.json(
-          { error: "Unable to create account. Check the invite code and try again." },
-          { status: 400 }
-        );
+    if (!error) {
+      const result = data as RegisterResult;
+      if (result?.success) {
+        return NextResponse.json({
+          success: true,
+          user: result.user,
+          message: result.message || "Account created. You can sign in now.",
+        });
       }
-
-      const result = data as { success?: boolean; error?: string; user?: { id: string; email: string }; message?: string };
-      if (!result?.success) {
-        return NextResponse.json(
-          { error: result?.error || "Unable to create account." },
-          { status: 400 }
-        );
+      // Fall through to service-role if allowlist miss; otherwise return RPC error
+      if (result?.error && !/not authorized/i.test(result.error)) {
+        const status = /already exists/i.test(result.error) ? 409 : 400;
+        return NextResponse.json({ error: result.error }, { status });
       }
-
-      return NextResponse.json({
-        success: true,
-        user: result.user,
-        message: result.message || "Account created. You can sign in now.",
-      });
+    } else {
+      console.error("register_staff_account RPC error:", error);
     }
 
-    // 2) Fallback: service-role create (no invite required for allowlisted emails)
+    // 2) Fallback: service-role create
     const admin = getServiceSupabase();
     if (!admin) {
       return NextResponse.json(
         {
           error:
-            "An invite code is required. Ask a signed-in staff member to create an invite in the CRM, or set SUPABASE_SERVICE_ROLE_KEY on the server.",
-          code: "INVITE_REQUIRED",
+            "Unable to create account for this email yet. Sign in as an existing admin once so allowlisted emails sync, then try again — or ask the owner to add your email under Staff access in the CRM.",
+          code: "ALLOWLIST_SYNC_REQUIRED",
         },
         { status: 400 }
       );
     }
 
-    const { data, error } = await admin.auth.admin.createUser({
+    const created = await admin.auth.admin.createUser({
       email,
       password: parsed.data.password,
       email_confirm: true,
@@ -97,15 +96,18 @@ export async function POST(req: Request) {
       },
     });
 
-    if (error) {
-      const msg = error.message || "Unable to create account";
+    if (created.error) {
+      const msg = created.error.message || "Unable to create account";
       const status = /already|registered|exists/i.test(msg) ? 409 : 400;
       return NextResponse.json({ error: msg }, { status });
     }
 
+    // Keep DB allowlist in sync for future RPC path
+    await admin.from("staff_allowlist").upsert({ email });
+
     return NextResponse.json({
       success: true,
-      user: { id: data.user?.id, email: data.user?.email },
+      user: { id: created.data.user?.id, email: created.data.user?.email },
       message: "Account created. You can sign in now.",
     });
   } catch (err) {

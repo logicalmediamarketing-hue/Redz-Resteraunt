@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
-import { isAdminEmail } from "@/lib/admin-emails";
+import { getAdminEmails, isAdminEmail, syncStaffAllowlist } from "@/lib/admin-emails";
 import { User } from "@supabase/supabase-js";
 import { 
   format, isToday, parseISO, isValid, 
@@ -84,19 +84,16 @@ export default function AdminPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [inviteCode, setInviteCode] = useState("");
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   const [authError, setAuthError] = useState<string | null>(null);
   const [authSuccess, setAuthSuccess] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(false);
 
-  // Staff invites (logged-in)
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteName, setInviteName] = useState("");
-  const [inviteBusy, setInviteBusy] = useState(false);
-  const [inviteMessage, setInviteMessage] = useState<string | null>(null);
-  const [lastInviteCode, setLastInviteCode] = useState<string | null>(null);
-  const [showInvitePanel, setShowInvitePanel] = useState(false);
+  // Staff allowlist management (logged-in)
+  const [staffEmail, setStaffEmail] = useState("");
+  const [staffBusy, setStaffBusy] = useState(false);
+  const [staffMessage, setStaffMessage] = useState<string | null>(null);
+  const [showStaffPanel, setShowStaffPanel] = useState(false);
 
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -175,6 +172,8 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (user && isAdminEmail(user.email)) {
+      // Keep DB allowlist aligned with NEXT_PUBLIC_ADMIN_EMAILS for password signup
+      void syncStaffAllowlist((rows) => supabase.from("staff_allowlist").upsert(rows));
       // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data fetch on auth change
       fetchReservations();
       fetchLeads();
@@ -218,12 +217,6 @@ export default function AdminPage() {
         return;
       }
 
-      if (!inviteCode.trim()) {
-        setAuthError("Invite code is required. Ask a signed-in staff member to create one in the CRM.");
-        setAuthLoading(false);
-        return;
-      }
-
       const res = await fetch("/api/admin/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -231,7 +224,6 @@ export default function AdminPage() {
           email: email.trim().toLowerCase(),
           password,
           full_name: fullName.trim() || undefined,
-          invite_code: inviteCode.trim(),
         }),
       });
       const payload = await res.json().catch(() => ({}));
@@ -281,38 +273,30 @@ export default function AdminPage() {
     await supabase.auth.signOut();
   };
 
-  const createStaffInvite = async (e: React.FormEvent) => {
+  const addStaffEmail = async (e: React.FormEvent) => {
     e.preventDefault();
-    setInviteBusy(true);
-    setInviteMessage(null);
-    setLastInviteCode(null);
+    setStaffBusy(true);
+    setStaffMessage(null);
 
-    const target = inviteEmail.trim().toLowerCase();
-    if (!isAdminEmail(target)) {
-      setInviteMessage("Add this email to NEXT_PUBLIC_ADMIN_EMAILS before inviting.");
-      setInviteBusy(false);
+    const target = staffEmail.trim().toLowerCase();
+    if (!target) {
+      setStaffBusy(false);
       return;
     }
 
-    const code = `REDZ-${Math.random().toString(36).slice(2, 6).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
-    const { error } = await supabase.from("staff_invites").insert([
-      {
-        email: target,
-        code,
-        full_name: inviteName.trim(),
-        created_by: user?.id || null,
-      },
-    ]);
-
+    const { error } = await supabase.from("staff_allowlist").upsert({ email: target });
     if (error) {
-      setInviteMessage(error.message);
+      setStaffMessage(error.message);
     } else {
-      setLastInviteCode(code);
-      setInviteMessage(`Invite created for ${target}. Share the code securely.`);
-      setInviteEmail("");
-      setInviteName("");
+      const inEnv = getAdminEmails().includes(target);
+      setStaffMessage(
+        inEnv
+          ? `${target} can create an account now (email + password on Create account).`
+          : `${target} added for signup. Also add it to NEXT_PUBLIC_ADMIN_EMAILS so they can open the CRM after signing in.`
+      );
+      setStaffEmail("");
     }
-    setInviteBusy(false);
+    setStaffBusy(false);
   };
 
   const updateStatus = async (id: string, newStatus: string) => {
@@ -533,27 +517,14 @@ export default function AdminPage() {
 
             <form onSubmit={handleAuth} className="space-y-5">
               {authMode === "signup" && (
-                <>
-                  <div>
-                    <label className="block text-gray-300 text-sm font-medium mb-1.5">Full name</label>
-                    <input 
-                      type="text" value={fullName} onChange={e => setFullName(e.target.value)}
-                      className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-redz-accent transition-colors"
-                      placeholder="Jordan Smith"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-gray-300 text-sm font-medium mb-1.5">Invite code</label>
-                    <input
-                      type="text"
-                      required
-                      value={inviteCode}
-                      onChange={(e) => setInviteCode(e.target.value)}
-                      className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-redz-accent transition-colors tracking-wider"
-                      placeholder="REDZ-XXXX-XXXX"
-                    />
-                  </div>
-                </>
+                <div>
+                  <label className="block text-gray-300 text-sm font-medium mb-1.5">Full name</label>
+                  <input 
+                    type="text" value={fullName} onChange={e => setFullName(e.target.value)}
+                    className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-redz-accent transition-colors"
+                    placeholder="Jordan Smith"
+                  />
+                </div>
               )}
               <div>
                 <label className="block text-gray-300 text-sm font-medium mb-1.5">Email Address</label>
@@ -572,7 +543,7 @@ export default function AdminPage() {
                 />
                 {authMode === "signup" && (
                   <p className="text-xs text-gray-500 mt-1.5">
-                    At least 8 characters. Email must be allowlisted and match an unused invite.
+                    At least 8 characters. Use an allowlisted staff email (no invite code needed).
                   </p>
                 )}
               </div>
@@ -605,10 +576,10 @@ export default function AdminPage() {
         <div className="flex items-center gap-4 sm:gap-6">
           <button
             type="button"
-            onClick={() => setShowInvitePanel((v) => !v)}
+            onClick={() => setShowStaffPanel((v) => !v)}
             className="text-sm text-gray-400 hover:text-white transition-colors hidden sm:inline"
           >
-            Invite staff
+            Staff access
           </button>
           <span className="text-sm text-gray-400 hidden sm:inline-block">{user.email}</span>
           <button type="button" onClick={handleLogout} className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
@@ -617,48 +588,37 @@ export default function AdminPage() {
         </div>
       </nav>
 
-      {showInvitePanel && (
+      {showStaffPanel && (
         <div className="border-b border-white/10 bg-black/40 px-6 py-4">
-          <form onSubmit={createStaffInvite} className="max-w-7xl mx-auto flex flex-col md:flex-row gap-3 md:items-end">
+          <form onSubmit={addStaffEmail} className="max-w-7xl mx-auto flex flex-col md:flex-row gap-3 md:items-end">
             <div className="flex-1">
-              <label className="block text-xs text-gray-400 mb-1">Staff email (must be allowlisted)</label>
+              <label className="block text-xs text-gray-400 mb-1">
+                Enable signup for email (no invite code)
+              </label>
               <input
                 type="email"
                 required
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
+                value={staffEmail}
+                onChange={(e) => setStaffEmail(e.target.value)}
                 className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-redz-accent"
                 placeholder="newstaff@laurellodging.com"
               />
             </div>
-            <div className="flex-1">
-              <label className="block text-xs text-gray-400 mb-1">Name (optional)</label>
-              <input
-                type="text"
-                value={inviteName}
-                onChange={(e) => setInviteName(e.target.value)}
-                className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-redz-accent"
-                placeholder="Full name"
-              />
-            </div>
             <button
               type="submit"
-              disabled={inviteBusy}
+              disabled={staffBusy}
               className="bg-redz-accent text-redz-charcoal font-bold px-4 py-2 rounded-lg text-sm hover:bg-white transition-colors disabled:opacity-50"
             >
-              {inviteBusy ? "Creating…" : "Generate invite"}
+              {staffBusy ? "Saving…" : "Allow account creation"}
             </button>
           </form>
-          {inviteMessage && (
-            <p className="max-w-7xl mx-auto mt-3 text-sm text-gray-300">{inviteMessage}</p>
+          {staffMessage && (
+            <p className="max-w-7xl mx-auto mt-3 text-sm text-gray-300">{staffMessage}</p>
           )}
-          {lastInviteCode && (
-            <p className="max-w-7xl mx-auto mt-1 text-sm">
-              Code:{" "}
-              <code className="text-redz-accent font-mono tracking-wider">{lastInviteCode}</code>
-              {" — "}share with them to use Create account on this page.
-            </p>
-          )}
+          <p className="max-w-7xl mx-auto mt-2 text-xs text-gray-500">
+            They create their own password on the Create account tab. Also add the email to{" "}
+            <code className="text-gray-400">NEXT_PUBLIC_ADMIN_EMAILS</code> for CRM access.
+          </p>
         </div>
       )}
 
