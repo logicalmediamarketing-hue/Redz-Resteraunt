@@ -68,14 +68,14 @@ export default function AboutPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-4xl mx-auto">
+        <div className="flex justify-center max-w-md mx-auto">
           {/* Head Chef */}
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="group relative rounded-2xl overflow-hidden bg-[#1A1A1A] border border-gray-800 shadow-2xl"
+            className="group relative rounded-2xl overflow-hidden bg-[#1A1A1A] border border-gray-800 shadow-2xl w-full"
           >
             <div className="relative h-[400px] w-full overflow-hidden">
               <Image 
@@ -91,32 +91,6 @@ export default function AboutPage() {
               <p className="text-redz-accent uppercase tracking-widest text-xs font-semibold mb-4">Executive Chef</p>
               <p className="text-gray-400 text-sm leading-relaxed">
                 With over two decades of culinary mastery across Europe and the Americas, Chef Kevin brings an unparalleled dedication to authentic flavors and locally sourced, seasonal ingredients.
-              </p>
-            </div>
-          </motion.div>
-
-          {/* Lead Bartender */}
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="group relative rounded-2xl overflow-hidden bg-[#1A1A1A] border border-gray-800 shadow-2xl"
-          >
-            <div className="relative h-[400px] w-full overflow-hidden">
-              <Image 
-                src="/images/original/hero-bartender.jpg"
-                alt="Lead Mixologist Wayne" 
-                fill 
-                className="object-cover object-top group-hover:scale-105 transition-transform duration-700"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-transparent to-transparent opacity-80" />
-            </div>
-            <div className="relative p-8 -mt-12 text-center bg-[#1A1A1A] z-10 mx-4 rounded-xl border border-gray-800 shadow-xl">
-              <h3 className="text-2xl font-serif text-white mb-1">Wayne</h3>
-              <p className="text-redz-accent uppercase tracking-widest text-xs font-semibold mb-4">Lead Mixologist</p>
-              <p className="text-gray-400 text-sm leading-relaxed">
-                Wayne&apos;s approach to mixology blends classic techniques with modern innovation, curating an award-winning selection of craft cocktails and premium pairings for our guests.
               </p>
             </div>
           </motion.div>
