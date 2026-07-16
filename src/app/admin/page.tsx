@@ -11,7 +11,7 @@ import {
 import { 
   Search, Calendar as CalendarIcon, Users, Clock, CheckCircle, XCircle, 
   AlertCircle, LogOut, RefreshCw, LayoutDashboard, Plus, Edit2, Trash2, X,
-  ChevronLeft, ChevronRight, List
+  ChevronLeft, ChevronRight, List, Mail
 } from "lucide-react";
 import Image from "next/image";
 
@@ -28,6 +28,29 @@ type Reservation = {
   created_at: string;
 };
 
+type Lead = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  event_type: string;
+  event_date: string;
+  guest_count: number;
+  special_requests: string;
+  status: string;
+  created_at: string;
+};
+
+/** Optional comma-separated staff emails. If set, only these accounts see CRM data. */
+function isAdminEmail(email: string | undefined): boolean {
+  const allow = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  if (allow.length === 0) return true; // rely on Supabase signup lockdown when unset
+  return !!email && allow.includes(email.toLowerCase());
+}
+
 export default function AdminPage() {
   const [user, setUser] = useState<User | null>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
@@ -38,12 +61,14 @@ export default function AdminPage() {
   const [authLoading, setAuthLoading] = useState(false);
 
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState(""); // "" means all dates
 
-  // Calendar State
+  // Calendar / CRM section State
+  const [crmSection, setCrmSection] = useState<"reservations" | "leads">("reservations");
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
@@ -96,12 +121,23 @@ export default function AdminPage() {
     setLoading(false);
   };
 
+  const fetchLeads = async () => {
+    const { data, error } = await supabase
+      .from("leads")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setLeads(data);
+    }
+  };
+
   useEffect(() => {
-    if (user) {
+    if (user && isAdminEmail(user.email)) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data fetch on auth change
       fetchReservations();
+      fetchLeads();
     }
-     
   }, [user]);
 
   // Sign-in only: staff accounts are provisioned by the owner in the Supabase dashboard
@@ -110,10 +146,24 @@ export default function AdminPage() {
     setAuthError(null);
     setAuthLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) setAuthError(error.message);
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      setAuthError(error.message);
+    } else if (data.user && !isAdminEmail(data.user.email)) {
+      await supabase.auth.signOut();
+      setAuthError("This account is not authorized for the CRM. Contact the owner.");
+    }
 
     setAuthLoading(false);
+  };
+
+  const updateLeadStatus = async (id: string, newStatus: string) => {
+    const { error } = await supabase.from("leads").update({ status: newStatus }).eq("id", id);
+    if (!error) {
+      setLeads(leads.map((l) => (l.id === id ? { ...l, status: newStatus } : l)));
+    } else {
+      alert("Error updating lead: " + error.message);
+    }
   };
 
   const handleLogout = async () => {
@@ -277,7 +327,7 @@ export default function AdminPage() {
     );
   }
 
-  if (!user) {
+  if (!user || !isAdminEmail(user.email)) {
     return (
       <div className="min-h-screen bg-redz-charcoal flex">
         {/* Left Side: Image */}
@@ -291,7 +341,7 @@ export default function AdminPage() {
           <div className="w-full max-w-md">
             <div className="mb-10 text-center lg:text-left">
               <h1 className="text-4xl font-serif text-white mb-2">Redz Command Center</h1>
-              <p className="text-gray-400">Secure access to the reservation management portal.</p>
+              <p className="text-gray-400">Staff sign-in only. Accounts are created by the owner in Supabase — there is no public sign-up.</p>
             </div>
             
             {authError && (
@@ -352,41 +402,128 @@ export default function AdminPage() {
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-6 lg:p-8">
         
-        {/* Header Action Row & View Toggle */}
+        {/* CRM section + Header Action Row */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-          <div className="flex items-center gap-6">
-            <h2 className="text-3xl font-serif">Reservation Management</h2>
-            
-            <div className="hidden sm:flex bg-black/50 p-1 rounded-lg border border-white/10">
-              <button 
+          <div className="flex flex-col gap-4">
+            <div className="flex bg-black/50 p-1 rounded-lg border border-white/10 w-fit">
+              <button
                 type="button"
-                onClick={() => setViewMode("list")}
-                className={`px-3 py-1.5 rounded-md flex items-center gap-2 transition-colors ${viewMode === 'list' ? 'bg-white/20 text-white shadow-sm' : 'text-gray-500 hover:text-white'}`}
-              >
-                <List className="w-4 h-4" />
-                <span className="text-sm font-medium">List</span>
-              </button>
-              <button 
-                type="button"
-                onClick={() => setViewMode("calendar")}
-                className={`px-3 py-1.5 rounded-md flex items-center gap-2 transition-colors ${viewMode === 'calendar' ? 'bg-white/20 text-white shadow-sm' : 'text-gray-500 hover:text-white'}`}
+                onClick={() => setCrmSection("reservations")}
+                className={`px-3 py-1.5 rounded-md flex items-center gap-2 transition-colors ${crmSection === "reservations" ? "bg-white/20 text-white shadow-sm" : "text-gray-500 hover:text-white"}`}
               >
                 <CalendarIcon className="w-4 h-4" />
-                <span className="text-sm font-medium">Calendar</span>
+                <span className="text-sm font-medium">Reservations</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setCrmSection("leads")}
+                className={`px-3 py-1.5 rounded-md flex items-center gap-2 transition-colors ${crmSection === "leads" ? "bg-white/20 text-white shadow-sm" : "text-gray-500 hover:text-white"}`}
+              >
+                <Mail className="w-4 h-4" />
+                <span className="text-sm font-medium">Leads / Contact</span>
+                {leads.filter((l) => l.status === "new").length > 0 && (
+                  <span className="ml-1 text-xs bg-redz-accent text-redz-charcoal px-1.5 py-0.5 rounded-full font-bold">
+                    {leads.filter((l) => l.status === "new").length}
+                  </span>
+                )}
               </button>
             </div>
+
+            {crmSection === "reservations" && (
+              <div className="flex items-center gap-6">
+                <h2 className="text-3xl font-serif">Reservation Management</h2>
+                <div className="hidden sm:flex bg-black/50 p-1 rounded-lg border border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("list")}
+                    className={`px-3 py-1.5 rounded-md flex items-center gap-2 transition-colors ${viewMode === "list" ? "bg-white/20 text-white shadow-sm" : "text-gray-500 hover:text-white"}`}
+                  >
+                    <List className="w-4 h-4" />
+                    <span className="text-sm font-medium">List</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("calendar")}
+                    className={`px-3 py-1.5 rounded-md flex items-center gap-2 transition-colors ${viewMode === "calendar" ? "bg-white/20 text-white shadow-sm" : "text-gray-500 hover:text-white"}`}
+                  >
+                    <CalendarIcon className="w-4 h-4" />
+                    <span className="text-sm font-medium">Calendar</span>
+                  </button>
+                </div>
+              </div>
+            )}
+            {crmSection === "leads" && (
+              <h2 className="text-3xl font-serif">Leads &amp; Contact</h2>
+            )}
           </div>
           
-          <button 
-            type="button"
-            onClick={openAddModal}
-            className="bg-redz-accent text-redz-charcoal px-5 py-2.5 rounded-lg font-bold hover:bg-white transition-colors flex items-center gap-2 w-full sm:w-auto justify-center"
-          >
-            <Plus className="w-5 h-5" />
-            New Booking
-          </button>
+          {crmSection === "reservations" && (
+            <button 
+              type="button"
+              onClick={openAddModal}
+              className="bg-redz-accent text-redz-charcoal px-5 py-2.5 rounded-lg font-bold hover:bg-white transition-colors flex items-center gap-2 w-full sm:w-auto justify-center"
+            >
+              <Plus className="w-5 h-5" />
+              New Booking
+            </button>
+          )}
         </div>
 
+        {crmSection === "leads" && (
+          <div className="bg-redz-charcoal-light border border-white/5 rounded-2xl overflow-hidden shadow-2xl mb-8">
+            <div className="overflow-x-auto">
+              {leads.length === 0 ? (
+                <div className="p-12 text-center text-gray-400">No leads or contact messages yet.</div>
+              ) : (
+                <table className="w-full text-left">
+                  <thead className="bg-black/40 text-xs uppercase tracking-wider text-gray-400">
+                    <tr>
+                      <th className="px-6 py-4 font-medium">Contact</th>
+                      <th className="px-6 py-4 font-medium">Type / Date</th>
+                      <th className="px-6 py-4 font-medium">Details</th>
+                      <th className="px-6 py-4 font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {leads.map((lead) => (
+                      <tr key={lead.id} className="hover:bg-white/[0.02]">
+                        <td className="px-6 py-4">
+                          <div className="font-medium text-white">{lead.name}</div>
+                          <div className="text-sm text-gray-400">{lead.email}</div>
+                          <div className="text-sm text-gray-500">{lead.phone}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-white capitalize">{lead.event_type}</div>
+                          <div className="text-sm text-gray-400">{lead.event_date}</div>
+                          {lead.event_type !== "contact" && (
+                            <div className="text-xs text-gray-500">{lead.guest_count} guests</div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 max-w-xs">
+                          <p className="text-sm text-gray-300 whitespace-normal">{lead.special_requests || "—"}</p>
+                        </td>
+                        <td className="px-6 py-4">
+                          <select
+                            value={lead.status}
+                            onChange={(e) => updateLeadStatus(lead.id, e.target.value)}
+                            className="bg-black/50 border border-white/10 hover:border-white/30 rounded px-2 py-1 text-xs text-gray-300 focus:border-redz-accent outline-none cursor-pointer"
+                          >
+                            <option value="new">New</option>
+                            <option value="contacted">Contacted</option>
+                            <option value="closed">Closed</option>
+                          </select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        )}
+
+        {crmSection === "reservations" && (
+        <>
         {/* Mobile View Toggle */}
         <div className="flex sm:hidden bg-black/50 p-1 rounded-lg border border-white/10 mb-6">
           <button 
@@ -695,6 +832,8 @@ export default function AdminPage() {
               </div>
             </div>
           </>
+        )}
+        </>
         )}
       </main>
 

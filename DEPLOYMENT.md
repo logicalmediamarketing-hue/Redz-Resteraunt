@@ -1,57 +1,85 @@
-# Redz Restaurant — Deployment & Domain Cutover Checklist
+# Redz Restaurant — Live Cutover
 
-Production stack: **Next.js 16 → Vercel**, **Supabase** (Postgres + Auth), **OpenAI** (chat),
-**Retell** (voice), **Resend** (email), **Twilio** (SMS).
+Linked accounts (marketing / Laurel Lodging):
+
+| Layer | Linked to |
+|---|---|
+| App host | Vercel team `logicalmediamarketing-5894s-projects` → **`redz-restaurant`** |
+| Database / Auth | Supabase org **LaurelDev** → project `dbzvxncnkgqgfjqcbyai` |
+| Domain | **`redzrestaurant.com`** + **`www.redzrestaurant.com`** on that Vercel project |
+| Henry chat | OpenRouter (`OPENROUTER_API_KEY` set in Vercel Production) |
+| CRM allowlist | `NEXT_PUBLIC_ADMIN_EMAILS=marketing@laurellodging.com` |
+
+Voice/Retell removed — chat only.
 
 ---
 
-## 1. Vercel environment variables
+## Done
 
-Set in **Vercel → Project → Settings → Environment Variables** (Production scope), then redeploy.
-Full list and notes are in [`.env.example`](.env.example).
+- [x] Production code deployed to Vercel  
+- [x] `OPENROUTER_API_KEY`, `CHAT_MODEL`, `NEXT_PUBLIC_SITE_URL` set  
+- [x] Supabase URL/anon key pointed at LaurelDev project  
+- [x] Stale `OPENAI_*` / `RETELL_*` env vars removed  
+- [x] `reservations` + `leads` tables created with RLS  
+- [x] Domain attached on Vercel (alias shows `https://redzrestaurant.com`)  
 
-| Variable | Required? | Notes |
+Live app (works now, before DNS):  
+https://redz-restaurant.vercel.app  
+
+Inspector:  
+https://vercel.com/logicalmediamarketing-5894s-projects/redz-restaurant  
+
+---
+
+## BLOCKER — DNS still on old hosting
+
+`redzrestaurant.com` currently resolves to Rackspace/`Microsoft-IIS` (old site), **not** Vercel.
+Full steps: **[DNS-CUTOVER.md](./DNS-CUTOVER.md)**
+
+Quick fix at Rackspace DNS (or wherever the zone lives):
+
+| Type | Name | Value |
 |---|---|---|
-| `NEXT_PUBLIC_SITE_URL` | ✅ on custom domain | Set to the live domain (e.g. `https://redzrestaurant.com`). Drives sitemap, robots, canonical/OG URLs. |
-| `NEXT_PUBLIC_SUPABASE_URL` | ✅ | `https://xtdutubocjaonocucuzs.supabase.co` |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | Supabase → Project Settings → API |
-| `OPENAI_API_KEY` | ✅ for chat | **Account needs funded billing/quota** or chat shows "Henry is offline". |
-| `RETELL_API_KEY` + `RETELL_AGENT_ID` | for voice | `RETELL_AGENT_ID` is read server-side. |
-| `RESEND_API_KEY`, `FROM_EMAIL`, `RESTAURANT_EMAIL` | for email | `FROM_EMAIL` must be on a Resend-verified domain. Skips silently if unset. |
-| `TWILIO_*` | for SMS | Skips silently if unset. |
+| `A` | `@` | `76.76.21.21` |
+| `A` | `www` | `76.76.21.21` |
 
-## 2. Supabase (before handoff to a paying client)
+Until that flips, share https://redz-restaurant.vercel.app as the live preview.
 
-- [ ] **Upgrade `redz-crm` to Pro ($25/mo).** Free tier auto-pauses after inactivity and takes the whole site down — this already happened once.
-- [ ] **Disable public sign-ups:** Supabase → Authentication → Providers/Settings → turn off "Allow new users to sign up". The admin sign-up UI is already removed in code, but the anon key can still call `signUp` until this is off. Create staff logins manually under Authentication → Users.
-- [ ] (Optional hardening) Reservation/lead RLS currently lets any authenticated user read all rows. Fine for a trusted single-owner login; revisit if staff logins are shared.
+---
 
-## 3. Custom domain
+## You must finish (Supabase Auth)
 
-- [ ] Vercel → Settings → Domains → add the domain.
-- [ ] Add the DNS records Vercel shows at the registrar:
-  - Apex `redzrestaurant.com` → `A 76.76.21.21`
-  - `www` → `CNAME cname.vercel-dns.com`
-  - (Vercel displays the exact current values — use those.)
-- [ ] Wait for SSL to provision (green check in Vercel).
-- [ ] Update `NEXT_PUBLIC_SITE_URL` to the new domain and redeploy.
-- [ ] If a Google Business Profile links the old URL, update it.
+1. Supabase → **Authentication → Users → Add user**  
+   - Email: `marketing@laurellodging.com`  
+   - Set a strong password (or invite)  
+2. **Authentication → Providers → Email** → **disable “Allow new users to sign up”**  
+3. Sign in at `https://redz-restaurant.vercel.app/admin` (then the custom domain)
 
-## 4. Post-deploy smoke test (on the live domain)
+---
 
-- [ ] Home, menus, about, contact, banquets, private-dining, reservations all load.
-- [ ] Chat ("Henry") replies to a question (confirms OpenAI billing is live).
-- [ ] Complete a reservation through chat → row appears in the admin dashboard.
-- [ ] Submit the contact form and a banquet inquiry → 200, no error.
-- [ ] `/<domain>/robots.txt` and `/<domain>/sitemap.xml` show the **correct domain**.
-- [ ] Log into `/admin` with a staff account; confirm sign-up is gone.
+## Email (Resend) — set in Vercel
 
-## 5. Submit for indexing (optional, recommended)
+| Variable | Value |
+|---|---|
+| `RESEND_API_KEY` | set in Production |
+| `FROM_EMAIL` | `info@redzrestaurant.com` |
+| `RESTAURANT_EMAIL` | `marketing@laurellodging.com` |
 
-- [ ] Google Search Console → add the domain → submit `sitemap.xml`.
+**Required in Resend dashboard:** verify domain `redzrestaurant.com` (DNS records Resend shows). Until verified, sends from `info@redzrestaurant.com` may fail.
+
+Optional Twilio SMS: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`, `RESTAURANT_PHONE_NUMBER`.
+
+---
+
+## Smoke test
+
+- [ ] Open https://redz-restaurant.vercel.app — pages load  
+- [ ] Henry chat replies (OpenRouter funded)  
+- [ ] Book a table via chat or `/reservations` → row in Supabase + `/admin`  
+- [ ] Banquet / contact form → **Leads / Contact** tab in CRM  
+- [ ] After DNS: https://redzrestaurant.com matches, `/sitemap.xml` uses that host  
 
 ---
 
 ### Deploy trigger
-`main` is connected to Vercel — every push to `main` deploys to production.
-Latest deployment-ready code is committed; push `main` to release.
+Push to `main` or `vercel deploy --prod` from this repo (linked project).

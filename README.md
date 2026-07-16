@@ -1,36 +1,33 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Redz Restaurant
 
-## Getting Started
+Next.js website + Henry AI concierge (OpenRouter chat) + Supabase CRM.
 
-First, run the development server:
+## Accounts (Laurel Lodging / marketing)
+
+| Service | Account / project |
+|---|---|
+| **Vercel** | `logicalmediamarketing-5894` → project `redz-restaurant` |
+| **Supabase** | LaurelDev org → `dbzvxncnkgqgfjqcbyai` |
+| **Domain** | `redzrestaurant.com` + `www` attached to the Vercel project |
+| **CRM login** | `marketing@laurellodging.com` (allowlisted via `NEXT_PUBLIC_ADMIN_EMAILS`) |
+
+## Stack
+
+- **Vercel** — hosts the Next.js app  
+- **Supabase** — Postgres + Auth + reservations / leads  
+- **OpenRouter** — Henry text chat only (voice/Retell removed)  
+- **Resend** — email confirmations (add `RESEND_API_KEY` when ready)  
+- **DNS** — point `redzrestaurant.com` at Vercel (see [DEPLOYMENT.md](./DEPLOYMENT.md))
+
+## Local development
 
 ```bash
+cp .env.example .env.local
+# fill OPENROUTER_API_KEY + Supabase keys
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Staff CRM: `/admin` (sign-in only — create users in Supabase Auth).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Full cutover checklist: **[DEPLOYMENT.md](./DEPLOYMENT.md)**.

@@ -1,4 +1,4 @@
-import { openai } from "@ai-sdk/openai";
+import { createOpenAI } from "@ai-sdk/openai";
 import { convertToModelMessages, stepCountIs, streamText, tool, type UIMessage } from "ai";
 import { z } from "zod";
 import { supabase } from "@/lib/supabase";
@@ -7,22 +7,67 @@ import { sameOriginOk, rateLimitOk, forbiddenResponse, rateLimitedResponse } fro
 
 export const maxDuration = 30;
 
+// Route the concierge through OpenRouter (OpenAI-compatible gateway) so billing
+// runs off a single OpenRouter balance and the model is swappable via env.
+// We call .chat() — the Chat Completions transport — because OpenRouter does not
+// implement OpenAI's newer /responses endpoint that the default openai() uses.
+const openrouter = createOpenAI({
+  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: process.env.OPENROUTER_API_KEY,
+  headers: {
+    "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL || "https://redz-restaurant.vercel.app",
+    "X-Title": "Redz Restaurant",
+    "X-OpenRouter-Title": "Redz Restaurant",
+  },
+});
+
+// Swappable without a code change; must support tool calling for book_reservation.
+// Default must be a currently available OpenRouter model id (tool-calling capable).
+const CHAT_MODEL = process.env.CHAT_MODEL || "openai/gpt-4o-mini";
+
+const chatBodySchema = z.object({
+  messages: z
+    .array(
+      z.object({
+        id: z.string().optional(),
+        role: z.enum(["system", "user", "assistant"]),
+        parts: z.array(z.unknown()).optional(),
+        content: z.unknown().optional(),
+      }).passthrough()
+    )
+    .min(1)
+    .max(40),
+});
+
 export async function POST(req: Request) {
   try {
+    if (!process.env.OPENROUTER_API_KEY) {
+      return Response.json(
+        { error: "Chat concierge is not configured" },
+        { status: 503 }
+      );
+    }
+
     // Each request is a billable LLM call — gate to our own pages and cap per-IP volume
     if (!sameOriginOk(req)) return forbiddenResponse();
-    if (!rateLimitOk(req, 'chat', 100)) return rateLimitedResponse();
+    if (!rateLimitOk(req, "chat", 30)) return rateLimitedResponse();
 
-    const { messages }: { messages: UIMessage[] } = await req.json();
+    const parsed = chatBodySchema.safeParse(await req.json());
+    if (!parsed.success) {
+      return Response.json({ error: "Invalid chat payload" }, { status: 400 });
+    }
+
+    const messages = parsed.data.messages as UIMessage[];
 
     const result = streamText({
-      model: openai("gpt-4o-mini"),
+      model: openrouter.chat(CHAT_MODEL),
       messages: await convertToModelMessages(messages),
       // Budget for tool call + retry + closing assistant text; the loop exits early
       // on any step that produces no tool calls
       stopWhen: stepCountIs(5),
       system: `You are Henry, the exclusive AI Concierge for Redz Restaurant in Mt Laurel, NJ. You are a highly professional, polite, and sophisticated Maître D'.
 Your primary goal is to answer questions about the restaurant (menus, hours, location) and autonomously book reservations.
+You communicate only via text chat — there is no voice mode.
 
 If a customer wants to make a reservation:
 1. You MUST gather the following details sequentially:
@@ -51,7 +96,7 @@ Restaurant Info:
             phone: z.string().describe("The guest's phone number"),
             date: z.string().describe("The reservation date in yyyy-mm-dd format"),
             time: z.string().describe("The reservation time in hh:mm format (24-hour or 12-hour)"),
-            party_size: z.number().describe("The number of guests in the party"),
+            party_size: z.number().int().min(1).max(20).describe("The number of guests in the party"),
             special_requests: z.string().optional().describe("Any special requests or dietary restrictions")
           }),
           execute: async ({ name, email, phone, date, time, party_size, special_requests }) => {
@@ -70,7 +115,7 @@ Restaurant Info:
                     time,
                     party_size,
                     special_requests: special_requests || "",
-                    status: "confirmed" // Automatically confirm reservations made by AI Concierge
+                    status: "pending",
                   }
                 ]);
 

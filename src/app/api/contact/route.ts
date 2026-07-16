@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { supabase } from "@/lib/supabase";
 import { sendNotifications } from "@/lib/notify";
 import { sameOriginOk, rateLimitOk, forbiddenResponse, rateLimitedResponse } from "@/lib/security";
 
@@ -20,6 +21,27 @@ export async function POST(req: Request) {
     const parsed = contactSchema.safeParse(await req.json());
     if (!parsed.success) {
       return NextResponse.json({ error: "Missing or invalid fields" }, { status: 400 });
+    }
+
+    const { name, email, phone, message } = parsed.data;
+
+    // Persist so CRM can see contact messages even if email delivery fails
+    const { error } = await supabase.from("leads").insert([
+      {
+        name,
+        email,
+        phone: phone || "",
+        event_type: "contact",
+        event_date: new Date().toISOString().slice(0, 10),
+        guest_count: 1,
+        special_requests: message,
+        status: "new",
+      },
+    ]);
+
+    if (error) {
+      console.error("Supabase contact lead insert error:", error);
+      // Still try to email — form shouldn't hard-fail if leads table rejects guest_count 0
     }
 
     await sendNotifications("contact", parsed.data);

@@ -6,6 +6,12 @@
 // determined attacker can forge Origin, so production should also enable
 // platform-level rate limiting (e.g. Vercel WAF) for defense in depth.
 
+function isLocalHost(value: string | null): boolean {
+  if (!value) return false;
+  const host = value.split(':')[0]?.toLowerCase();
+  return host === 'localhost' || host === '127.0.0.1' || host === '::1';
+}
+
 export function sameOriginOk(req: Request): boolean {
   const origin = req.headers.get('origin');
   if (!origin) return false;
@@ -18,8 +24,27 @@ export function sameOriginOk(req: Request): boolean {
   }
 
   const host = req.headers.get('host');
-  const isLocalhost = originHost === 'localhost' || originHost.startsWith('localhost:');
-  return originHost === host || isLocalhost;
+  if (!host) return false;
+
+  // Exact match against the request Host (normal production / preview traffic)
+  if (originHost === host) return true;
+
+  // Explicit production allowlist from SITE_URL (covers www vs apex mismatches)
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  if (siteUrl) {
+    try {
+      if (originHost === new URL(siteUrl).host) return true;
+    } catch {
+      // ignore malformed SITE_URL
+    }
+  }
+
+  // Localhost only in development AND only when the request itself is local
+  if (process.env.NODE_ENV === 'development' && isLocalHost(originHost) && isLocalHost(host)) {
+    return true;
+  }
+
+  return false;
 }
 
 // Best-effort in-memory sliding-window limiter, per serverless instance.

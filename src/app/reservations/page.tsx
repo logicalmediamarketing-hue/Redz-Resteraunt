@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -33,48 +32,33 @@ export default function ReservationsPage() {
     setIsSubmitting(true);
     setError(null);
 
-    const { error } = await supabase
-      .from('reservations')
-      .insert([
-        {
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          date: formData.date,
-          time: formData.time,
-          party_size: parseInt(formData.party_size),
-          special_requests: formData.special_requests,
-          status: 'pending'
-        }
-      ]);
-
-    if (error) {
-      setError(error.message);
-    } else {
-      // Trigger Email & SMS notification
-      try {
-        await fetch('/api/notify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'reservation',
-            data: formData
-          })
-        });
-      } catch (err) {
-        console.error("Failed to trigger notifications", err);
-      }
-
-      setSuccess(true);
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        date: "",
-        time: "",
-        party_size: "2",
-        special_requests: ""
+    try {
+      const res = await fetch("/api/reservations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          party_size: parseInt(formData.party_size, 10),
+        }),
       });
+
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(payload.error || "Unable to submit reservation. Please try again or call 856-380-6045.");
+      } else {
+        setSuccess(true);
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          date: "",
+          time: "",
+          party_size: "2",
+          special_requests: "",
+        });
+      }
+    } catch {
+      setError("Unable to submit reservation. Please try again or call 856-380-6045.");
     }
     setIsSubmitting(false);
   };
@@ -135,8 +119,8 @@ export default function ReservationsPage() {
                 <div className="w-20 h-20 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
                   <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                 </div>
-                <h2 className="text-3xl font-serif text-white mb-4">Reservation Confirmed</h2>
-                <p className="text-gray-400 mb-8">We have received your reservation request and look forward to serving you.</p>
+                <h2 className="text-3xl font-serif text-white mb-4">Request Received</h2>
+                <p className="text-gray-400 mb-8">We have received your reservation request and will confirm shortly. Check your email for a confirmation.</p>
                 <button onClick={() => setSuccess(false)} className="border border-redz-accent text-redz-accent px-8 py-3 rounded hover:bg-redz-accent hover:text-redz-charcoal transition-colors">
                   Book Another Table
                 </button>
