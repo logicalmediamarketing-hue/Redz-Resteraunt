@@ -27,7 +27,7 @@ export default function Navbar() {
       </div>
       <div className={`max-w-7xl mx-auto px-6 flex justify-between items-center transition-all duration-300 ${isScrolled ? "py-4" : "py-6"}`}>
         <Link href="/" className="flex items-center gap-2">
-          <Image src="/images/original/logo.png" alt="Redz Restaurant Logo" width={100} height={35} className="object-contain" />
+          <Image src="/images/original/logo-v2.png" alt="Redz Restaurant Logo" width={120} height={85} className="object-contain" priority />
         </Link>
         
         <div className="hidden md:flex space-x-8 text-white font-medium">

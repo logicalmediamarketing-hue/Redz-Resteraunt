@@ -51,7 +51,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
         <div>
           <div className="mb-6">
-            <Image src="/images/original/logo.png" alt="Redz Restaurant Logo" width={120} height={42} className="object-contain" />
+            <Image src="/images/original/logo-v2.png" alt="Redz Restaurant Logo" width={140} height={99} className="object-contain" />
           </div>
           <p className="text-gray-400 mb-6 mt-4">Inspired American Fare located in the DoubleTree Suites by Hilton in Mt Laurel, NJ.</p>
         </div>
