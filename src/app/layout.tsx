@@ -23,6 +23,14 @@ export const metadata: Metadata = {
   description: "Experience authentic, premium American cuisine at Redz Restaurant in Mt Laurel, NJ. Join us for lunch, dinner, or a casual night out.",
   // No title/description/url here: leaving them unset lets Next.js backfill
   // og:title/og:description per page from each route's own metadata
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+  },
   openGraph: {
     siteName: "Redz Restaurant",
     locale: "en_US",

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
+import { isAdminEmail } from "@/lib/admin-emails";
 import { User } from "@supabase/supabase-js";
 import { 
   format, isToday, parseISO, isValid, 
@@ -11,7 +12,7 @@ import {
 import { 
   Search, Calendar as CalendarIcon, Users, Clock, CheckCircle, XCircle, 
   AlertCircle, LogOut, RefreshCw, LayoutDashboard, Plus, Edit2, Trash2, X,
-  ChevronLeft, ChevronRight, List, Mail
+  ChevronLeft, ChevronRight, List, Mail, MessageSquare, Globe, Phone
 } from "lucide-react";
 import Image from "next/image";
 
@@ -25,6 +26,8 @@ type Reservation = {
   party_size: number;
   status: string;
   special_requests: string;
+  source?: string;
+  deleted_at?: string | null;
   created_at: string;
 };
 
@@ -41,14 +44,37 @@ type Lead = {
   created_at: string;
 };
 
-/** Optional comma-separated staff emails. If set, only these accounts see CRM data. */
-function isAdminEmail(email: string | undefined): boolean {
-  const allow = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-  if (allow.length === 0) return true; // rely on Supabase signup lockdown when unset
-  return !!email && allow.includes(email.toLowerCase());
+function sourceLabel(source?: string): string {
+  switch (source) {
+    case "henry":
+      return "Henry";
+    case "admin":
+      return "Staff";
+    case "phone":
+      return "Phone";
+    case "website":
+      return "Website";
+    default:
+      return source || "Website";
+  }
+}
+
+function SourceBadge({ source }: { source?: string }) {
+  const label = sourceLabel(source);
+  const icon =
+    source === "henry" ? (
+      <MessageSquare className="w-3 h-3" />
+    ) : source === "phone" || source === "admin" ? (
+      <Phone className="w-3 h-3" />
+    ) : (
+      <Globe className="w-3 h-3" />
+    );
+  return (
+    <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wide text-gray-400 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded mt-1">
+      {icon}
+      {label}
+    </span>
+  );
 }
 
 export default function AdminPage() {
@@ -57,14 +83,27 @@ export default function AdminPage() {
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
+  const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   const [authError, setAuthError] = useState<string | null>(null);
+  const [authSuccess, setAuthSuccess] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(false);
+
+  // Staff invites (logged-in)
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteName, setInviteName] = useState("");
+  const [inviteBusy, setInviteBusy] = useState(false);
+  const [inviteMessage, setInviteMessage] = useState<string | null>(null);
+  const [lastInviteCode, setLastInviteCode] = useState<string | null>(null);
+  const [showInvitePanel, setShowInvitePanel] = useState(false);
 
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [sourceFilter, setSourceFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState(""); // "" means all dates
 
   // Calendar / CRM section State
@@ -89,7 +128,8 @@ export default function AdminPage() {
     time: "",
     party_size: "2",
     special_requests: "",
-    status: "confirmed"
+    status: "confirmed",
+    source: "admin",
   });
 
   useEffect(() => {
@@ -111,6 +151,7 @@ export default function AdminPage() {
     const { data, error } = await supabase
       .from('reservations')
       .select('*')
+      .is('deleted_at', null)
       .not('name', 'like', 'DELETED_%')
       .order('date', { ascending: true })
       .order('time', { ascending: true });
@@ -137,14 +178,84 @@ export default function AdminPage() {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data fetch on auth change
       fetchReservations();
       fetchLeads();
+
+      const channel = supabase
+        .channel("crm-reservations")
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "reservations" },
+          () => {
+            fetchReservations();
+          }
+        )
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "leads" },
+          () => {
+            fetchLeads();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [user]);
 
-  // Sign-in only: staff accounts are provisioned by the owner in the Supabase dashboard
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
+    setAuthSuccess(null);
     setAuthLoading(true);
+
+    if (authMode === "signup") {
+      if (!isAdminEmail(email)) {
+        setAuthError(
+          "This email is not on the staff allowlist. Ask the owner to add it to NEXT_PUBLIC_ADMIN_EMAILS."
+        );
+        setAuthLoading(false);
+        return;
+      }
+
+      if (!inviteCode.trim()) {
+        setAuthError("Invite code is required. Ask a signed-in staff member to create one in the CRM.");
+        setAuthLoading(false);
+        return;
+      }
+
+      const res = await fetch("/api/admin/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          password,
+          full_name: fullName.trim() || undefined,
+          invite_code: inviteCode.trim(),
+        }),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setAuthError(payload.error || "Unable to create account.");
+        setAuthLoading(false);
+        return;
+      }
+
+      // Auto sign-in after successful create
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+      if (error) {
+        setAuthSuccess("Account created. Please sign in.");
+        setAuthMode("signin");
+      } else if (data.user && !isAdminEmail(data.user.email)) {
+        await supabase.auth.signOut();
+        setAuthError("This account is not authorized for the CRM.");
+      }
+      setAuthLoading(false);
+      return;
+    }
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
@@ -170,6 +281,40 @@ export default function AdminPage() {
     await supabase.auth.signOut();
   };
 
+  const createStaffInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setInviteBusy(true);
+    setInviteMessage(null);
+    setLastInviteCode(null);
+
+    const target = inviteEmail.trim().toLowerCase();
+    if (!isAdminEmail(target)) {
+      setInviteMessage("Add this email to NEXT_PUBLIC_ADMIN_EMAILS before inviting.");
+      setInviteBusy(false);
+      return;
+    }
+
+    const code = `REDZ-${Math.random().toString(36).slice(2, 6).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+    const { error } = await supabase.from("staff_invites").insert([
+      {
+        email: target,
+        code,
+        full_name: inviteName.trim(),
+        created_by: user?.id || null,
+      },
+    ]);
+
+    if (error) {
+      setInviteMessage(error.message);
+    } else {
+      setLastInviteCode(code);
+      setInviteMessage(`Invite created for ${target}. Share the code securely.`);
+      setInviteEmail("");
+      setInviteName("");
+    }
+    setInviteBusy(false);
+  };
+
   const updateStatus = async (id: string, newStatus: string) => {
     const { error } = await supabase
       .from('reservations')
@@ -191,10 +336,13 @@ export default function AdminPage() {
   const executeDelete = async () => {
     if (!reservationToDelete) return;
     
-    // Perform a soft-delete by renaming to bypass strict ENUM/CHECK restrictions on the status column
     const { error } = await supabase
       .from('reservations')
-      .update({ status: 'cancelled', name: 'DELETED_' + reservationToDelete })
+      .update({
+        status: 'cancelled',
+        deleted_at: new Date().toISOString(),
+        name: 'DELETED_' + reservationToDelete,
+      })
       .eq('id', reservationToDelete);
     
     if (!error) {
@@ -217,7 +365,8 @@ export default function AdminPage() {
       time: formData.time,
       party_size: parseInt(formData.party_size),
       special_requests: formData.special_requests,
-      status: formData.status
+      status: formData.status,
+      source: formData.source || "admin",
     };
 
     if (isEditModalOpen && editingReservation) {
@@ -262,7 +411,8 @@ export default function AdminPage() {
       time: res.time,
       party_size: res.party_size.toString(),
       special_requests: res.special_requests || "",
-      status: res.status
+      status: res.status,
+      source: res.source || "admin",
     });
     setIsEditModalOpen(true);
   };
@@ -276,7 +426,8 @@ export default function AdminPage() {
       time: "18:00",
       party_size: "2",
       special_requests: "",
-      status: "confirmed" // walk-ins/phone-ins usually confirmed immediately
+      status: "confirmed",
+      source: "phone",
     });
     setIsAddModalOpen(true);
   };
@@ -299,11 +450,12 @@ export default function AdminPage() {
         (res.email && res.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (res.phone && res.phone.includes(searchTerm));
       const matchesStatus = statusFilter === "all" || res.status === statusFilter;
+      const matchesSource = sourceFilter === "all" || (res.source || "website") === sourceFilter;
       const matchesDate = dateFilter === "" || res.date === dateFilter;
       
-      return matchesSearch && matchesStatus && matchesDate;
+      return matchesSearch && matchesStatus && matchesSource && matchesDate;
     });
-  }, [reservations, searchTerm, statusFilter, dateFilter]);
+  }, [reservations, searchTerm, statusFilter, sourceFilter, dateFilter]);
 
   const stats = useMemo(() => {
     const pending = reservations.filter(r => r.status === 'pending').length;
@@ -341,7 +493,30 @@ export default function AdminPage() {
           <div className="w-full max-w-md">
             <div className="mb-10 text-center lg:text-left">
               <h1 className="text-4xl font-serif text-white mb-2">Redz Command Center</h1>
-              <p className="text-gray-400">Staff sign-in only. Accounts are created by the owner in Supabase — there is no public sign-up.</p>
+              <p className="text-gray-400">
+                Staff CRM for reservations and leads. Allowlisted emails can create an account here.
+              </p>
+            </div>
+
+            <div className="flex bg-black/40 p-1 rounded-lg border border-white/10 mb-6">
+              <button
+                type="button"
+                onClick={() => { setAuthMode("signin"); setAuthError(null); setAuthSuccess(null); }}
+                className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
+                  authMode === "signin" ? "bg-white/15 text-white" : "text-gray-500 hover:text-white"
+                }`}
+              >
+                Sign in
+              </button>
+              <button
+                type="button"
+                onClick={() => { setAuthMode("signup"); setAuthError(null); setAuthSuccess(null); }}
+                className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
+                  authMode === "signup" ? "bg-white/15 text-white" : "text-gray-500 hover:text-white"
+                }`}
+              >
+                Create account
+              </button>
             </div>
             
             {authError && (
@@ -350,30 +525,65 @@ export default function AdminPage() {
                 <p className="text-sm">{authError}</p>
               </div>
             )}
+            {authSuccess && (
+              <div className="bg-green-500/10 border border-green-500/40 text-green-400 px-4 py-3 rounded-lg mb-6 text-sm">
+                {authSuccess}
+              </div>
+            )}
 
             <form onSubmit={handleAuth} className="space-y-5">
+              {authMode === "signup" && (
+                <>
+                  <div>
+                    <label className="block text-gray-300 text-sm font-medium mb-1.5">Full name</label>
+                    <input 
+                      type="text" value={fullName} onChange={e => setFullName(e.target.value)}
+                      className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-redz-accent transition-colors"
+                      placeholder="Jordan Smith"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-300 text-sm font-medium mb-1.5">Invite code</label>
+                    <input
+                      type="text"
+                      required
+                      value={inviteCode}
+                      onChange={(e) => setInviteCode(e.target.value)}
+                      className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-redz-accent transition-colors tracking-wider"
+                      placeholder="REDZ-XXXX-XXXX"
+                    />
+                  </div>
+                </>
+              )}
               <div>
                 <label className="block text-gray-300 text-sm font-medium mb-1.5">Email Address</label>
                 <input 
                   type="email" required value={email} onChange={e => setEmail(e.target.value)}
                   className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-redz-accent transition-colors"
-                  placeholder="admin@redz.com"
+                  placeholder="staff@laurellodging.com"
                 />
               </div>
               <div>
                 <label className="block text-gray-300 text-sm font-medium mb-1.5">Password</label>
                 <input 
-                  type="password" required value={password} onChange={e => setPassword(e.target.value)}
+                  type="password" required minLength={8} value={password} onChange={e => setPassword(e.target.value)}
                   className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-redz-accent transition-colors"
                   placeholder="••••••••"
                 />
+                {authMode === "signup" && (
+                  <p className="text-xs text-gray-500 mt-1.5">
+                    At least 8 characters. Email must be allowlisted and match an unused invite.
+                  </p>
+                )}
               </div>
               <button 
                 type="submit" 
                 disabled={authLoading}
                 className="w-full bg-redz-accent text-redz-charcoal font-bold py-3.5 rounded-lg mt-2 hover:bg-white transition-colors disabled:opacity-50"
               >
-                {authLoading ? "Authenticating..." : "Access Portal"}
+                {authLoading
+                  ? authMode === "signup" ? "Creating account…" : "Authenticating…"
+                  : authMode === "signup" ? "Create staff account" : "Access Portal"}
               </button>
             </form>
           </div>
@@ -392,13 +602,65 @@ export default function AdminPage() {
           </div>
           <h1 className="text-xl font-serif font-bold tracking-wide">Redz CRM</h1>
         </div>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4 sm:gap-6">
+          <button
+            type="button"
+            onClick={() => setShowInvitePanel((v) => !v)}
+            className="text-sm text-gray-400 hover:text-white transition-colors hidden sm:inline"
+          >
+            Invite staff
+          </button>
           <span className="text-sm text-gray-400 hidden sm:inline-block">{user.email}</span>
           <button type="button" onClick={handleLogout} className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
             <LogOut className="w-4 h-4" /> <span className="hidden sm:inline">Sign Out</span>
           </button>
         </div>
       </nav>
+
+      {showInvitePanel && (
+        <div className="border-b border-white/10 bg-black/40 px-6 py-4">
+          <form onSubmit={createStaffInvite} className="max-w-7xl mx-auto flex flex-col md:flex-row gap-3 md:items-end">
+            <div className="flex-1">
+              <label className="block text-xs text-gray-400 mb-1">Staff email (must be allowlisted)</label>
+              <input
+                type="email"
+                required
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-redz-accent"
+                placeholder="newstaff@laurellodging.com"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-xs text-gray-400 mb-1">Name (optional)</label>
+              <input
+                type="text"
+                value={inviteName}
+                onChange={(e) => setInviteName(e.target.value)}
+                className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-redz-accent"
+                placeholder="Full name"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={inviteBusy}
+              className="bg-redz-accent text-redz-charcoal font-bold px-4 py-2 rounded-lg text-sm hover:bg-white transition-colors disabled:opacity-50"
+            >
+              {inviteBusy ? "Creating…" : "Generate invite"}
+            </button>
+          </form>
+          {inviteMessage && (
+            <p className="max-w-7xl mx-auto mt-3 text-sm text-gray-300">{inviteMessage}</p>
+          )}
+          {lastInviteCode && (
+            <p className="max-w-7xl mx-auto mt-1 text-sm">
+              Code:{" "}
+              <code className="text-redz-accent font-mono tracking-wider">{lastInviteCode}</code>
+              {" — "}share with them to use Create account on this page.
+            </p>
+          )}
+        </div>
+      )}
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-6 lg:p-8">
         
@@ -693,10 +955,22 @@ export default function AdminPage() {
                   <option value="completed">Completed</option>
                   <option value="cancelled">Cancelled</option>
                 </select>
+
+                <select
+                  value={sourceFilter}
+                  onChange={(e) => setSourceFilter(e.target.value)}
+                  className="w-full sm:w-auto bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-redz-accent appearance-none transition-colors cursor-pointer"
+                >
+                  <option value="all">All Sources</option>
+                  <option value="website">Website</option>
+                  <option value="henry">Henry</option>
+                  <option value="phone">Phone</option>
+                  <option value="admin">Staff</option>
+                </select>
                 
                 <button 
                   type="button"
-                  onClick={fetchReservations} 
+                  onClick={() => { fetchReservations(); fetchLeads(); }} 
                   disabled={loading}
                   className="bg-white/5 hover:bg-white/10 border border-white/10 text-white px-4 py-2.5 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
                 >
@@ -718,8 +992,8 @@ export default function AdminPage() {
                   <div className="flex flex-col items-center justify-center h-64 text-gray-400">
                     <CalendarIcon className="w-12 h-12 mb-4 opacity-20" />
                     <p className="text-lg">No reservations match your filters.</p>
-                    {(searchTerm || statusFilter !== 'all' || dateFilter) && (
-                      <button type="button" onClick={() => { setSearchTerm(''); setStatusFilter('all'); setDateFilter(''); }} className="mt-4 text-redz-accent hover:underline text-sm">
+                    {(searchTerm || statusFilter !== 'all' || sourceFilter !== 'all' || dateFilter) && (
+                      <button type="button" onClick={() => { setSearchTerm(''); setStatusFilter('all'); setSourceFilter('all'); setDateFilter(''); }} className="mt-4 text-redz-accent hover:underline text-sm">
                         Clear All Filters
                       </button>
                     )}
@@ -751,6 +1025,7 @@ export default function AdminPage() {
                           <tr key={res.id} className="hover:bg-white/5 transition-colors group">
                             <td className="px-6 py-4">
                               <div className="font-medium text-white text-base">{res.name}</div>
+                              <SourceBadge source={res.source} />
                               <div className="text-sm text-gray-400 mt-1">{res.email || "No email"}</div>
                               <div className="text-sm text-gray-400">{res.phone || "No phone"}</div>
                               {res.special_requests && (
@@ -880,7 +1155,7 @@ export default function AdminPage() {
             </div>
             
             <form onSubmit={handleSaveReservation} className="p-6 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Guest Name *</label>
                   <input 
@@ -898,6 +1173,20 @@ export default function AdminPage() {
                     <option value="confirmed">Confirmed</option>
                     <option value="completed">Completed</option>
                     <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Source</label>
+                  <select
+                    value={formData.source}
+                    onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+                    className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-redz-accent appearance-none"
+                  >
+                    <option value="phone">Phone</option>
+                    <option value="admin">Walk-in / Staff</option>
+                    <option value="website">Website</option>
+                    <option value="henry">Henry</option>
+                    <option value="other">Other</option>
                   </select>
                 </div>
               </div>

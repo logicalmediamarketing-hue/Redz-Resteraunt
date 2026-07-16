@@ -1,22 +1,40 @@
-# Create the CRM admin (2 minutes)
+# Redz CRM admin setup
 
-Supabase currently has **0** auth users. `/admin` needs one staff account.
+Staff use `/admin` to manage reservations (website + Henry + phone) and leads.
 
-## Steps (LaurelDev project)
+## Sign in (existing account)
 
-1. Open: https://supabase.com/dashboard/project/dbzvxncnkgqgfjqcbyai/auth/users  
-2. **Add user** → Email: `marketing@laurellodging.com`  
-3. Set a strong password (or Auto Generate) → enable **Auto Confirm User**  
-4. Save  
+- Email: `marketing@laurellodging.com` (already provisioned)
+- URL: `/admin` on production or preview
 
-Then lock the door:
+## Create a new staff account
 
-5. https://supabase.com/dashboard/project/dbzvxncnkgqgfjqcbyai/auth/providers  
-6. Email provider → turn **OFF** “Allow new users to sign up” → Save  
+1. **Allowlist the email** in Vercel / env:
 
-Sign in:
+```bash
+NEXT_PUBLIC_ADMIN_EMAILS="marketing@laurellodging.com,newstaff@laurellodging.com"
+```
 
-- Preview: https://redz-restaurant.vercel.app/admin  
-- After DNS: https://redzrestaurant.com/admin  
+Redeploy after changing this.
 
-Only `marketing@laurellodging.com` is allowlisted (`NEXT_PUBLIC_ADMIN_EMAILS`).
+2. **Signed-in staff** opens `/admin` → **Invite staff** → enter the allowlisted email → **Generate invite**.
+
+3. Share the invite code (e.g. `REDZ-AB12-CD34`) securely.
+
+4. New staff opens `/admin` → **Create account** → email + invite code + password → they are signed in.
+
+Invites are stored in `staff_invites` and claimed via the `register_staff_from_invite` database function (no `SUPABASE_SERVICE_ROLE_KEY` required).
+
+### Optional: service-role shortcut
+
+If `SUPABASE_SERVICE_ROLE_KEY` is set on the server, allowlisted emails can also be created without an invite code (Admin API). Prefer invites for auditability.
+
+## Booking pipeline (connected)
+
+| Channel | Source tag in CRM |
+|---------|-------------------|
+| `/reservations` form | `website` |
+| Henry AI concierge | `henry` |
+| Staff “New Booking” | `phone` / `admin` |
+
+All channels write to the same `reservations` table. Website + Henry enforce capacity; staff CRM entries can override.

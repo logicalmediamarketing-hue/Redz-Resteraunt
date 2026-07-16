@@ -18,6 +18,15 @@ type BookingResult = {
   error?: string;
 };
 
+type AvailabilityResult = {
+  success: boolean;
+  date?: string;
+  party_size?: number;
+  available_slots?: { time: string; label: string; remaining: number }[];
+  message?: string;
+  error?: string;
+};
+
 export default function AIConcierge() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
@@ -107,6 +116,63 @@ export default function AIConcierge() {
                           </div>
                         </div>
                       );
+                    }
+
+                    if (part.type === "tool-check_availability") {
+                      const toolKey = `${msg.id}-avail-${partIndex}`;
+                      if (part.state === "input-streaming" || part.state === "input-available") {
+                        return (
+                          <div key={toolKey} className="flex justify-start my-2 w-full">
+                            <div className="bg-redz-charcoal-light border border-gray-800 rounded-2xl p-4 flex items-center gap-3 max-w-[85%]">
+                              <RefreshCw className="w-4 h-4 text-redz-accent animate-spin" />
+                              <span className="text-xs text-gray-300">Checking open tables…</span>
+                            </div>
+                          </div>
+                        );
+                      }
+                      if (part.state === "output-available") {
+                        const result = part.output as AvailabilityResult;
+                        if (!result.success) {
+                          return (
+                            <div key={toolKey} className="flex justify-start my-2">
+                              <div className="bg-red-950/20 border border-red-800/40 rounded-2xl p-4 text-xs text-red-400 max-w-[85%]">
+                                <p className="font-bold flex items-center gap-1.5 mb-1 text-red-300">
+                                  <AlertCircle size={14} />
+                                  <span>Availability check failed</span>
+                                </p>
+                                <p>{result.error || "Please try another date."}</p>
+                              </div>
+                            </div>
+                          );
+                        }
+                        const slots = result.available_slots || [];
+                        return (
+                          <div key={toolKey} className="flex justify-start my-2 w-full">
+                            <div className="bg-redz-charcoal-light border border-gray-800 rounded-2xl p-4 max-w-[85%] text-xs text-gray-300 w-full">
+                              <p className="font-medium text-white mb-2">
+                                Open times{result.date ? ` · ${result.date}` : ""}
+                              </p>
+                              {slots.length === 0 ? (
+                                <p className="text-gray-400">No open slots for that party size.</p>
+                              ) : (
+                                <div className="flex flex-wrap gap-1.5">
+                                  {slots.slice(0, 8).map((s) => (
+                                    <span
+                                      key={s.time}
+                                      className="px-2 py-1 rounded bg-black/40 border border-white/10 text-gray-200"
+                                    >
+                                      {s.label}
+                                    </span>
+                                  ))}
+                                  {slots.length > 8 && (
+                                    <span className="px-2 py-1 text-gray-500">+{slots.length - 8} more</span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      }
                     }
 
                     if (part.type === "tool-book_reservation") {

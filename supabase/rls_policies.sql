@@ -60,4 +60,6 @@ CREATE POLICY "auth_delete_leads"
   USING (true);
 
 -- After running: Supabase → Authentication → Providers → Email
--- → DISABLE "Allow new users to sign up". Create staff users manually.
+-- → DISABLE "Allow new users to sign up".
+-- Staff accounts: allowlisted Create account on /admin via SUPABASE_SERVICE_ROLE_KEY
+-- (see ADMIN-SETUP.md), or Add user in the Supabase Auth dashboard.
