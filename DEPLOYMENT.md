@@ -5,7 +5,7 @@ Linked accounts (marketing / Laurel Lodging):
 | Layer | Linked to |
 |---|---|
 | App host | Vercel team `logicalmediamarketing-5894s-projects` → **`redz-restaurant`** |
-| Database / Auth | Supabase org **LaurelDev** → project `dbzvxncnkgqgfjqcbyai` |
+| Database / Auth | Supabase **Laurel Lodging / marketing@** → LaurelDev → `dbzvxncnkgqgfjqcbyai` (see [SUPABASE-LAUREL.md](./SUPABASE-LAUREL.md)) |
 | Domain | **`redzrestaurant.com`** + **`www.redzrestaurant.com`** on that Vercel project |
 | Henry chat | OpenRouter (`OPENROUTER_API_KEY` set in Vercel Production) |
 | CRM allowlist | `NEXT_PUBLIC_ADMIN_EMAILS=marketing@laurellodging.com` |

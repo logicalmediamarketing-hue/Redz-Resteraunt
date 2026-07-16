@@ -6,10 +6,12 @@ Next.js website + Henry AI concierge (OpenRouter chat) + Supabase CRM.
 
 | Service | Account / project |
 |---|---|
-| **Vercel** | `logicalmediamarketing-5894` → project `redz-restaurant` |
-| **Supabase** | LaurelDev org → `dbzvxncnkgqgfjqcbyai` |
+| **Vercel** (host only) | `logicalmediamarketing-5894` → project `redz-restaurant` |
+| **Supabase** (DB + Auth) | **Laurel Lodging / marketing@** → LaurelDev org → `dbzvxncnkgqgfjqcbyai` |
 | **Domain** | `redzrestaurant.com` + `www` attached to the Vercel project |
 | **CRM login** | `marketing@laurellodging.com` (allowlisted via `NEXT_PUBLIC_ADMIN_EMAILS`) |
+
+If Vercel says the database is connected to the wrong account, see **[SUPABASE-LAUREL.md](./SUPABASE-LAUREL.md)**.
 
 ## Stack
 
