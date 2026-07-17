@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -11,20 +12,18 @@ export default function NewsEventsPage() {
       title: "Thursday Night Special",
       time: "Every Thursday | 4:00pm - Close",
       desc: "Bartender's Choice: $15.00 bottle of wine! Discount available at bar only.",
-      img: "/images/original/thursday_wine_special.jpg"
+      img: "/images/original/thursday_wine_special.jpg",
+      imageAlt: "Wine bottles featured for the Thursday Night Special",
     },
     {
-      title: "Spirits After 4",
-      time: "Monday - Thursday | 4:00pm - 6:00pm",
-      desc: "Join us for our legendary happy hour with discounted drinks and appetizers at the bar.",
-      img: "/images/original/craft-cocktails.jpg"
+      title: "Happy Hour",
+      time: "Monday–Friday | 4:00 PM–6:00 PM",
+      desc: "Join us for Happy Hour with discounted drinks and appetizers at the bar.",
+      img: "/images/original/craft-cocktails.jpg",
+      imageAlt: "Handcrafted cocktail served at the Redz bar",
+      href: "/menus/happy-hour",
+      cta: "View Happy Hour Menu",
     },
-    {
-      title: "It's Back! The 28 oz. Bone-in-Rib Eye",
-      time: "Available Daily",
-      desc: "For the meat lovers out there, this will satisfy any appetite. Ask your server for details.",
-      img: "/images/bone-in-rib-eye-hq.jpg"
-    }
   ];
 
   return (
@@ -70,26 +69,82 @@ export default function NewsEventsPage() {
 
       <section className="relative z-10 max-w-7xl mx-auto px-6 mb-24">
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 gap-8">
           {specials.map((special, i) => (
             <motion.div
-              key={i}
+              key={special.title}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 + (i * 0.1) }}
               className="bg-redz-charcoal-light border border-white/5 rounded-2xl overflow-hidden hover:border-redz-accent/50 transition-colors group flex flex-col"
             >
               <div className="relative h-48 w-full overflow-hidden">
-                <Image src={special.img} alt={special.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+                <Image src={special.img} alt={special.imageAlt} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
               </div>
-              <div className="p-8 flex-1">
+              <div className="p-8 flex flex-1 flex-col">
                 <h3 className="text-2xl font-serif text-redz-accent mb-2">{special.title}</h3>
                 <p className="text-sm font-bold text-gray-300 uppercase tracking-wider mb-4 border-b border-white/10 pb-4">{special.time}</p>
                 <p className="text-gray-400">{special.desc}</p>
+                {special.href && special.cta ? (
+                  <Link
+                    href={special.href}
+                    className="mt-6 inline-flex items-center justify-center rounded bg-gradient-to-b from-white to-slate-100 px-6 py-3 font-bold text-zinc-950 shadow-[inset_0_1px_0_rgba(255,255,255,1),0_8px_24px_rgba(0,0,0,0.22)] transition-all duration-300 hover:-translate-y-0.5 hover:from-white hover:to-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                  >
+                    {special.cta}
+                  </Link>
+                ) : null}
               </div>
             </motion.div>
           ))}
         </div>
+
+        <motion.article
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ delay: 0.1 }}
+          className="mt-12 overflow-hidden rounded-2xl border border-white/5 bg-redz-charcoal-light lg:grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]"
+        >
+          <div className="relative min-h-72 lg:min-h-full">
+            <Image
+              src="/images/original/bar-and-lounge-01.jpg"
+              alt="The warm bar and lounge at Redz Restaurant"
+              fill
+              sizes="(min-width: 1024px) 45vw, 100vw"
+              className="object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-redz-charcoal-light/70 to-transparent lg:bg-gradient-to-r" />
+          </div>
+
+          <div className="p-8 sm:p-10 lg:p-12">
+            <p className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-gray-300">
+              Happy Hour &amp; Private Dining
+            </p>
+            <h2 className="mb-6 text-3xl font-serif text-redz-accent sm:text-4xl">
+              Gather at Redz for Happy Hour
+            </h2>
+            <div className="space-y-5 text-gray-300 leading-relaxed">
+              <p>
+                Looking for the perfect setting for a small gathering, team outing, birthday toast, or casual celebration? Redz Restaurant &amp; Bar offers a warm, inviting atmosphere, great food, handcrafted cocktails, and a private dining room that is ideal for bringing people together.
+              </p>
+              <p>
+                Join us for Happy Hour Monday through Friday from 4 PM to 6 PM and enjoy a relaxed setting with shareable bites, cold drinks, and the kind of hospitality that makes every gathering feel easy.
+              </p>
+              <p>
+                Our private dining room is available for small groups looking for a more comfortable and personal space to connect, celebrate, or unwind.
+              </p>
+              <p>
+                Book your private dining room today and make your next gathering a Redz gathering.
+              </p>
+            </div>
+            <Link
+              href="/private-dining"
+              className="mt-8 inline-flex items-center justify-center rounded bg-gradient-to-b from-white to-slate-100 px-7 py-4 font-bold text-zinc-950 shadow-[inset_0_1px_0_rgba(255,255,255,1),0_8px_24px_rgba(0,0,0,0.22)] transition-all duration-300 hover:-translate-y-0.5 hover:from-white hover:to-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+            >
+              Book Your Private Dining Room
+            </Link>
+          </div>
+        </motion.article>
       </section>
 
       <section className="py-24 bg-redz-charcoal-light border-y border-redz-accent/10">
