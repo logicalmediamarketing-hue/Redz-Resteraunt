@@ -117,7 +117,7 @@ export default function ContactPage() {
                 {submitError && (
                   <p className="text-sm text-red-400 bg-red-400/10 border border-red-400/20 rounded p-3">{submitError}</p>
                 )}
-                <button type="submit" disabled={isSubmitting} className="w-full bg-redz-accent text-white py-4 rounded font-bold hover:bg-white hover:text-redz-charcoal transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                <button type="submit" disabled={isSubmitting} className="w-full bg-gradient-to-b from-white to-slate-100 text-zinc-950 border border-white py-4 rounded font-bold shadow-[inset_0_1px_0_rgba(255,255,255,1),0_8px_24px_rgba(0,0,0,0.22)] hover:from-white hover:to-white hover:-translate-y-0.5 hover:shadow-[inset_0_1px_0_rgba(255,255,255,1),0_12px_30px_rgba(0,0,0,0.28)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0">
                   {isSubmitting ? "Sending..." : "Send Message"}
                 </button>
               </form>
@@ -139,7 +139,7 @@ export default function ContactPage() {
                 515 Fellowship Road<br />
                 Mt Laurel, NJ 08054
               </p>
-              <a href="https://g.page/redzrestaurant?share" target="_blank" rel="noopener noreferrer" className="inline-block mt-4 text-redz-accent hover:text-white transition-colors uppercase tracking-wider text-sm font-bold border-b border-redz-accent pb-1">
+              <a href="https://g.page/redzrestaurant?share" target="_blank" rel="noopener noreferrer" className="inline-block mt-4 text-gray-300 underline decoration-white/30 underline-offset-4 hover:text-white hover:decoration-white transition-colors uppercase tracking-wider text-sm font-bold pb-1">
                 Get Directions
               </a>
             </div>

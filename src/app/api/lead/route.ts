@@ -50,12 +50,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unable to submit inquiry. Please try again or call us." }, { status: 500 });
     }
 
-    // Trigger notification (Email/SMS) directly — no HTTP roundtrip
+    // Private dining inquiries go to DOSM with a full handoff email;
+    // other lead types keep the banquet notification path.
+    const isPrivateDining = /^private\s*dining/i.test(event_type);
     try {
-      await sendNotifications("banquet", {
+      await sendNotifications(isPrivateDining ? "private_dining" : "banquet", {
         name,
         email,
         phone,
+        event_type,
         event_date,
         guest_count,
         special_requests

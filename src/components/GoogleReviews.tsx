@@ -58,7 +58,7 @@ export default function GoogleReviews() {
             href="https://www.google.com/maps/search/Redz+Restaurant+Mt+Laurel+NJ" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="inline-block border border-redz-accent text-redz-accent px-8 py-3 rounded font-bold hover:bg-redz-accent hover:text-redz-charcoal transition-colors text-sm tracking-wider uppercase"
+            className="inline-block bg-white/5 border border-white/30 text-white backdrop-blur-sm hover:bg-white/15 hover:border-white/60 px-8 py-3 rounded font-bold transition-colors text-sm tracking-wider uppercase"
           >
             Read More on Google
           </a>

@@ -49,10 +49,10 @@ export default function Home() {
             An elevated dining experience combining authentic flavors, craft pairings, and modern luxury.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
-            <Link href="/reservations" className="bg-redz-accent text-redz-charcoal px-8 py-4 rounded font-bold hover:bg-white transition-colors text-lg">
+            <Link href="/reservations" className="bg-gradient-to-b from-white to-slate-100 text-zinc-950 border border-white shadow-[inset_0_1px_0_rgba(255,255,255,1),0_8px_24px_rgba(0,0,0,0.22)] hover:from-white hover:to-white hover:-translate-y-0.5 hover:shadow-[inset_0_1px_0_rgba(255,255,255,1),0_12px_30px_rgba(0,0,0,0.28)] transition-all duration-300 px-8 py-4 rounded font-bold text-lg">
               Reserve a Table
             </Link>
-            <Link href="/menus" className="bg-transparent border border-white/30 text-white px-8 py-4 rounded font-bold hover:bg-white/10 transition-colors text-lg backdrop-blur-sm">
+            <Link href="/menus" className="bg-white/5 border border-white/30 text-white backdrop-blur-sm hover:bg-white/15 hover:border-white/60 transition-all duration-300 px-8 py-4 rounded font-bold text-lg">
               Explore Menus
             </Link>
           </div>
@@ -137,10 +137,15 @@ export default function Home() {
           <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-10 leading-relaxed font-light">
             From intimate private dining to grand celebrations in the Falls Grand Ballroom, complete with elegant Koi ponds and waterfalls.
           </p>
-          <a href="https://doubletree-weddings.vercel.app/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 border border-redz-accent text-redz-accent px-10 py-4 rounded font-bold hover:bg-redz-accent hover:text-redz-charcoal transition-colors text-lg backdrop-blur-sm">
-            Explore DoubleTree Events
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-          </a>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/private-dining" className="inline-flex items-center gap-2 bg-gradient-to-b from-white to-slate-100 text-zinc-950 border border-white shadow-[inset_0_1px_0_rgba(255,255,255,1),0_8px_24px_rgba(0,0,0,0.22)] hover:from-white hover:to-white hover:-translate-y-0.5 hover:shadow-[inset_0_1px_0_rgba(255,255,255,1),0_12px_30px_rgba(0,0,0,0.28)] transition-all duration-300 px-10 py-4 rounded font-bold text-lg">
+              Private Dining at Redz
+            </Link>
+            <a href="https://doubletree-weddings.vercel.app/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-white/5 border border-white/30 text-white backdrop-blur-sm hover:bg-white/15 hover:border-white/60 transition-all duration-300 px-10 py-4 rounded font-bold text-lg">
+              Explore DoubleTree Events
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            </a>
+          </div>
         </div>
       </section>
 

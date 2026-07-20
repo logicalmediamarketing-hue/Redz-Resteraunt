@@ -169,7 +169,7 @@ export async function getAvailability(
     return {
       slots: [],
       maxCovers: maxCoversPerSlot(),
-      error: `Parties larger than ${MAX_PARTY_ONLINE} should call ${RESTAURANT_PHONE} or inquire via Banquets.`,
+      error: `Parties larger than ${MAX_PARTY_ONLINE} should call ${RESTAURANT_PHONE}, inquire via Private Dining, or Banquets for larger events.`,
     };
   }
 
@@ -232,7 +232,7 @@ export async function createReservation(
   if (raw.party_size > MAX_PARTY_ONLINE && !skipCapacity) {
     return {
       success: false,
-      error: `For parties larger than ${MAX_PARTY_ONLINE}, please call ${RESTAURANT_PHONE} or use our Banquets inquiry.`,
+      error: `For parties larger than ${MAX_PARTY_ONLINE}, please call ${RESTAURANT_PHONE}, use Private Dining, or Banquets for larger events.`,
     };
   }
 

@@ -239,7 +239,7 @@ export default function ReservationsPage() {
                 <button
                   type="button"
                   onClick={() => setSuccess(false)}
-                  className="border border-redz-accent text-redz-accent px-8 py-3 rounded hover:bg-redz-accent hover:text-redz-charcoal transition-colors"
+                  className="bg-white/5 border border-white/30 text-white backdrop-blur-sm px-8 py-3 rounded hover:bg-white/15 hover:border-white/60 transition-all duration-300"
                 >
                   Book Another Table
                 </button>
@@ -311,9 +311,13 @@ export default function ReservationsPage() {
                       ))}
                     </select>
                     <p className="text-xs text-gray-500 mt-2">
-                      Parties of 13+ —{" "}
-                      <Link href="/banquets" className="text-redz-accent hover:underline">
-                        banquet inquiry
+                      Parties of 13–20 —{" "}
+                      <Link href="/private-dining" className="text-gray-300 underline decoration-white/30 underline-offset-4 hover:text-white hover:decoration-white transition-colors">
+                        inquire about private dining
+                      </Link>
+                      . Larger events —{" "}
+                      <Link href="/banquets" className="text-gray-300 underline decoration-white/30 underline-offset-4 hover:text-white hover:decoration-white transition-colors">
+                        banquets
                       </Link>{" "}
                       or call 856-380-6045.
                     </p>
@@ -387,7 +391,7 @@ export default function ReservationsPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting || !formData.time}
-                  className="w-full bg-redz-accent text-redz-charcoal font-bold py-4 rounded-lg hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-gradient-to-b from-white to-slate-100 text-zinc-950 border border-white font-bold py-4 rounded-lg shadow-[inset_0_1px_0_rgba(255,255,255,1),0_8px_24px_rgba(0,0,0,0.22)] hover:from-white hover:to-white hover:-translate-y-0.5 hover:shadow-[inset_0_1px_0_rgba(255,255,255,1),0_12px_30px_rgba(0,0,0,0.28)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                 >
                   {isSubmitting ? "Submitting…" : "Request Reservation"}
                 </button>

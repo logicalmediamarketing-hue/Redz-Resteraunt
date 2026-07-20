@@ -78,7 +78,7 @@ export default function DinnerMenuPage() {
             Dinner Menu
           </motion.h1>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
-            <Link href="/menus" className="text-gray-300 hover:text-redz-accent transition-colors underline underline-offset-4">
+            <Link href="/menus" className="text-gray-300 hover:text-white transition-colors underline underline-offset-4">
               &larr; Back to all menus
             </Link>
           </motion.div>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { MapPin, Phone } from "lucide-react";
+import BrandLogo from "./BrandLogo";
 
 const InstagramIcon = ({ size = 24, className }: { size?: number, className?: string }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -41,7 +42,7 @@ export default function Footer() {
             href="https://www.hilton.com/en/hotels/phlfrdt-doubletree-suites-mt-laurel/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block bg-redz-accent text-white px-10 py-4 text-sm font-bold tracking-[0.2em] uppercase hover:bg-white hover:text-redz-charcoal transition-all duration-300 border border-transparent hover:border-white shadow-[0_0_20px_rgba(186,28,33,0.3)] hover:shadow-white/20"
+            className="inline-block bg-gradient-to-b from-white to-slate-100 text-zinc-950 border border-white shadow-[inset_0_1px_0_rgba(255,255,255,1),0_8px_24px_rgba(0,0,0,0.22)] hover:from-white hover:to-white hover:-translate-y-0.5 hover:shadow-[inset_0_1px_0_rgba(255,255,255,1),0_12px_30px_rgba(0,0,0,0.28)] px-10 py-4 text-sm font-bold tracking-[0.2em] uppercase transition-all duration-300"
           >
             Book Your Suite
           </a>
@@ -51,19 +52,19 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
         <div>
           <div className="mb-6">
-            <Image src="/images/original/logo-v2.png" alt="Redz Restaurant Logo" width={140} height={99} className="object-contain" />
+            <BrandLogo />
           </div>
           <p className="text-gray-400 mb-6 mt-4">Inspired American Fare located in the DoubleTree Suites by Hilton in Mt Laurel, NJ.</p>
         </div>
         <div>
           <h4 className="text-lg font-bold mb-6">Quick Links</h4>
-          <ul className="space-y-3 text-gray-400">
-            <li><Link href="/menus" className="hover:text-redz-accent transition-colors">Menus</Link></li>
-            <li><Link href="/private-dining" className="hover:text-redz-accent transition-colors">Private Dining</Link></li>
-            <li><Link href="/banquets" className="hover:text-redz-accent transition-colors">Banquets</Link></li>
-            <li><Link href="/news" className="hover:text-redz-accent transition-colors">News & Events</Link></li>
-            <li><Link href="/about" className="hover:text-redz-accent transition-colors">About Us</Link></li>
-            <li><Link href="/contact" className="hover:text-redz-accent transition-colors">Contact</Link></li>
+          <ul className="space-y-3 text-gray-300">
+            <li><Link href="/menus" className="hover:text-white transition-colors">Menus</Link></li>
+            <li><Link href="/private-dining" className="hover:text-white transition-colors">Private Dining</Link></li>
+            <li><Link href="/banquets" className="hover:text-white transition-colors">Banquets</Link></li>
+            <li><Link href="/news" className="hover:text-white transition-colors">News & Events</Link></li>
+            <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
+            <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
           </ul>
         </div>
         <div>

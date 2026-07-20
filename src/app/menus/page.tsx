@@ -62,7 +62,7 @@ export default function MenusPage() {
             <div className="absolute inset-0 bg-gradient-to-t from-redz-charcoal via-redz-charcoal/40 to-transparent flex flex-col justify-end p-8">
               <h2 className="text-4xl font-serif text-redz-accent mb-2">Dinner</h2>
               <p className="text-gray-200 mb-4">Authentic specialties from all over the country. Mon-Sat 4:00pm - 10:00pm.</p>
-              <span className="inline-block text-sm uppercase tracking-wider border border-white/30 px-4 py-2 rounded backdrop-blur-sm group-hover:bg-redz-accent group-hover:border-redz-accent transition-colors w-fit">
+              <span className="inline-block text-sm uppercase tracking-wider border border-white/40 text-white bg-black/20 backdrop-blur-sm group-hover:bg-white group-hover:text-redz-charcoal group-hover:border-white px-4 py-2 rounded transition-colors w-fit">
                 View Dinner Menu
               </span>
             </div>
@@ -86,7 +86,7 @@ export default function MenusPage() {
             <div className="absolute inset-0 bg-gradient-to-t from-redz-charcoal via-redz-charcoal/40 to-transparent flex flex-col justify-end p-8">
               <h2 className="text-4xl font-serif text-redz-accent mb-2">Happy Hour</h2>
               <p className="text-gray-200 mb-4">Join us at the bar Monday-Friday from 4:00pm to 6:00pm.</p>
-              <span className="inline-block text-sm uppercase tracking-wider border border-white/30 px-4 py-2 rounded backdrop-blur-sm group-hover:bg-redz-accent group-hover:border-redz-accent transition-colors w-fit">
+              <span className="inline-block text-sm uppercase tracking-wider border border-white/40 text-white bg-black/20 backdrop-blur-sm group-hover:bg-white group-hover:text-redz-charcoal group-hover:border-white px-4 py-2 rounded transition-colors w-fit">
                 View Happy Hour Menu
               </span>
             </div>
@@ -108,7 +108,7 @@ export default function MenusPage() {
               <h2 className="text-4xl font-serif text-redz-accent mb-4">Breakfast</h2>
               <p className="text-gray-300">Start your morning right. Mon-Fri 6:30am - 10:30am. Sat-Sun 7:00am - 11:30am.</p>
             </div>
-            <span className="inline-block text-sm uppercase tracking-wider border border-redz-accent text-redz-accent px-6 py-3 rounded hover:bg-redz-accent hover:text-white transition-colors">
+            <span className="inline-block text-sm uppercase tracking-wider border border-white/40 text-white bg-black/20 backdrop-blur-sm group-hover:bg-white group-hover:text-redz-charcoal group-hover:border-white px-6 py-3 rounded transition-colors">
               View Breakfast Menu
             </span>
           </motion.div>

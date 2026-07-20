@@ -75,7 +75,7 @@ export default function AIConcierge() {
 
         <button
           onClick={() => setIsOpen(true)}
-          className="relative w-16 h-16 rounded-full bg-redz-accent text-redz-charcoal shadow-[0_0_20px_rgba(158,0,0,0.6)] flex items-center justify-center hover:bg-white transition-colors duration-300 group cursor-pointer"
+          className="relative w-16 h-16 rounded-full bg-gradient-to-b from-white to-slate-100 text-zinc-950 border border-white shadow-[inset_0_1px_0_rgba(255,255,255,1),0_8px_24px_rgba(0,0,0,0.22)] hover:from-white hover:to-white hover:-translate-y-0.5 flex items-center justify-center transition-all duration-300 group cursor-pointer"
           aria-label="Open Henry AI Concierge"
         >
           <ConciergeBell size={28} className="group-hover:scale-110 transition-transform duration-300" />
@@ -285,7 +285,7 @@ export default function AIConcierge() {
                 <button
                   type="submit"
                   disabled={!input?.trim() || isLoading}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-redz-accent text-redz-charcoal rounded-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white transition-colors cursor-pointer"
+                  className="absolute right-2 inset-y-0 my-auto w-8 h-8 bg-gradient-to-b from-white to-slate-100 text-zinc-950 border border-white shadow-[inset_0_1px_0_rgba(255,255,255,1),0_8px_24px_rgba(0,0,0,0.22)] hover:from-white hover:to-white hover:-translate-y-0.5 disabled:hover:translate-y-0 rounded-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 cursor-pointer"
                 >
                   <Send size={14} className="-ml-0.5" />
                 </button>
