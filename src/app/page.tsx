@@ -42,12 +42,9 @@ export default function Home() {
           style={{ opacity: opacityText, y: yText, scale: scaleText }}
           className="relative z-20 text-center px-4 max-w-4xl mx-auto flex flex-col items-center"
         >
-          <h1 className="text-5xl md:text-8xl font-serif font-bold text-white mb-6 drop-shadow-2xl">
+          <h1 className="text-5xl md:text-8xl font-serif font-bold text-white mb-10 drop-shadow-2xl">
             Inspired American Fare.
           </h1>
-          <p className="text-lg md:text-2xl text-gray-200 mb-10 max-w-2xl font-light">
-            An elevated dining experience combining authentic flavors, craft pairings, and modern luxury.
-          </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Link href="/reservations" className="bg-gradient-to-b from-white to-slate-100 text-zinc-950 border border-white shadow-[inset_0_1px_0_rgba(255,255,255,1),0_8px_24px_rgba(0,0,0,0.22)] hover:from-white hover:to-white hover:-translate-y-0.5 hover:shadow-[inset_0_1px_0_rgba(255,255,255,1),0_12px_30px_rgba(0,0,0,0.28)] transition-all duration-300 px-8 py-4 rounded font-bold text-lg">
               Reserve a Table
