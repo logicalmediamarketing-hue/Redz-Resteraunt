@@ -32,6 +32,15 @@ function parseRecipients(value: string): string[] {
     .filter(Boolean);
 }
 
+/** Hilton wedding / catering handoff — always CC'd on contact & event leads */
+const HILTON_EVENT_EMAILS = parseRecipients(
+  process.env.HILTON_EVENT_EMAILS || 'weddings@hilton.com,catering@hilton.com'
+);
+
+function uniqueEmails(...groups: string[][]): string[] {
+  return [...new Set(groups.flat().map((e) => e.trim()).filter(Boolean))];
+}
+
 function formatDisplayDate(value?: string): string {
   if (!value) return 'Not specified';
   // Prefer yyyy-mm-dd from the form; fall back to raw string
@@ -205,7 +214,7 @@ function buildNotification(type: NotificationType, data: NotificationData): Buil
       guestHtml: guest.html,
       staffSubject: staff.subject,
       staffHtml: staff.html,
-      staffTo: parseRecipients(DOSM_EMAIL),
+      staffTo: uniqueEmails(parseRecipients(DOSM_EMAIL), HILTON_EVENT_EMAILS),
       smsBody: `Redz Restaurant: Hi ${data.name}, we received your private dining inquiry for ${data.guest_count} guests on ${data.event_date}. Our team will contact you shortly!`,
       staffSmsBody: `Private dining lead: ${data.name} | ${occasion} | ${data.guest_count} guests | ${data.event_date} | ${data.phone || data.email || ''}`,
     };
@@ -240,7 +249,7 @@ function buildNotification(type: NotificationType, data: NotificationData): Buil
       guestHtml,
       staffSubject: `NEW BANQUET INQUIRY: ${data.name}`,
       staffHtml,
-      staffTo: parseRecipients(DOSM_EMAIL),
+      staffTo: uniqueEmails(parseRecipients(DOSM_EMAIL), HILTON_EVENT_EMAILS),
       smsBody: `Redz Restaurant: Hi ${data.name}, we received your banquet inquiry for ${data.event_date}. Our team will contact you shortly!`,
       staffSmsBody: `New banquet request from ${data.name}: ${data.phone || ''}`,
     };
@@ -256,16 +265,39 @@ function buildNotification(type: NotificationType, data: NotificationData): Buil
       <div style="background: #f4f4f4; padding: 20px; border-radius: 8px;">
         <p><strong>Your message:</strong></p>
         <p>${esc(data.message)}</p>
-        ${data.phone ? `<p><strong>Phone:</strong> ${esc(data.phone)}</p>` : ''}
       </div>
     </div>
   `;
+  const submittedAt = new Date().toLocaleString('en-US', {
+    timeZone: 'America/New_York',
+    dateStyle: 'full',
+    timeStyle: 'short',
+  });
+  const staffHtml = emailShell(
+    'New Contact Message',
+    `
+      <p style="font-family: sans-serif; font-size: 15px; line-height: 1.6; margin-top: 0;">
+        A new contact message was submitted on <a href="${esc(SITE_URL)}/contact" style="color: #BA1C21;">redzrestaurant.com/contact</a>. Reply to this email to contact the guest directly.
+      </p>
+      <table style="width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #e8e8e8; border-radius: 8px; overflow: hidden; font-family: sans-serif; margin: 20px 0;">
+        ${detailRow('Guest name', data.name)}
+        ${data.email ? detailRow('Email', data.email, { href: `mailto:${data.email}` }) : detailRow('Email', 'Not provided')}
+        ${data.phone ? detailRow('Phone', data.phone, { href: `tel:${data.phone}` }) : detailRow('Phone', 'Not provided')}
+        ${detailRow('Message', data.message?.trim() ? data.message : 'None')}
+        ${detailRow('Submitted (ET)', submittedAt)}
+        ${detailRow('Source', `${SITE_URL}/contact`)}
+      </table>
+      <p style="font-family: sans-serif; font-size: 13px; color: #666; line-height: 1.5;">
+        This lead is also saved in the CRM under <strong>Leads / Contact</strong>.
+      </p>
+    `
+  );
   return {
     guestSubject,
     guestHtml,
     staffSubject: `NEW CONTACT: ${data.name}`,
-    staffHtml: guestHtml,
-    staffTo: parseRecipients(RESTAURANT_EMAIL),
+    staffHtml,
+    staffTo: uniqueEmails(parseRecipients(RESTAURANT_EMAIL), HILTON_EVENT_EMAILS),
     smsBody: '',
     staffSmsBody: `New contact message from ${data.name}: ${data.phone || data.email || ''}`,
   };

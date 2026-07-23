@@ -9,7 +9,7 @@ export const maxDuration = 30;
 const contactSchema = z.object({
   name: z.string().trim().min(1).max(120),
   email: z.string().trim().email().max(254),
-  phone: z.string().trim().max(30).optional(),
+  phone: z.string().trim().min(7).max(30),
   message: z.string().trim().min(1).max(2000)
 });
 
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
       {
         name,
         email,
-        phone: phone || "",
+        phone,
         event_type: "contact",
         event_date: new Date().toISOString().slice(0, 10),
         guest_count: 1,

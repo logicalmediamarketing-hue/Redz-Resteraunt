@@ -14,6 +14,7 @@ export default function ContactPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,6 +29,7 @@ export default function ContactPage() {
         body: JSON.stringify({
           name: `${firstName} ${lastName}`.trim(),
           email,
+          phone,
           message
         })
       });
@@ -109,6 +111,10 @@ export default function ContactPage() {
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">Email Address</label>
                   <input required type="email" maxLength={254} value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-redz-charcoal border border-gray-800 rounded p-3 focus:outline-none focus:border-redz-accent text-white" />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Phone Number</label>
+                  <input required type="tel" maxLength={30} value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-redz-charcoal border border-gray-800 rounded p-3 focus:outline-none focus:border-redz-accent text-white" />
                 </div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">Message</label>
