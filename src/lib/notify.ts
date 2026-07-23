@@ -32,13 +32,22 @@ function parseRecipients(value: string): string[] {
     .filter(Boolean);
 }
 
-/** Hilton wedding / catering handoff — always CC'd on contact & event leads */
-const HILTON_EVENT_EMAILS = parseRecipients(
-  process.env.HILTON_EVENT_EMAILS || 'weddings@hilton.com,catering@hilton.com'
+/**
+ * Always included on every staff notification from the site
+ * (reservations, contact, private dining, banquets).
+ */
+const SITE_STAFF_EMAILS = parseRecipients(
+  process.env.SITE_STAFF_EMAILS ||
+    'phlfr_restauraunt@hilton.com,phlfr_catering@hilton.com,marketing@laurellodging.com'
 );
 
 function uniqueEmails(...groups: string[][]): string[] {
   return [...new Set(groups.flat().map((e) => e.trim()).filter(Boolean))];
+}
+
+/** Merge primary recipients with the site-wide staff forward list. */
+function staffRecipients(...primary: string[]): string[] {
+  return uniqueEmails(...primary.map(parseRecipients), SITE_STAFF_EMAILS);
 }
 
 function formatDisplayDate(value?: string): string {
@@ -199,7 +208,7 @@ function buildNotification(type: NotificationType, data: NotificationData): Buil
       guestHtml,
       staffSubject: `NEW RESERVATION: ${data.name}`,
       staffHtml: guestHtml,
-      staffTo: parseRecipients(RESTAURANT_EMAIL),
+      staffTo: staffRecipients(RESTAURANT_EMAIL),
       smsBody: `Redz Restaurant: Hi ${data.name}, your reservation request for ${data.party_size} on ${data.date} at ${data.time} has been received!`,
       staffSmsBody: `New reservation from ${data.name}: ${data.phone || 'no phone'} — ${data.party_size} on ${data.date} at ${data.time}`,
     };
@@ -214,7 +223,7 @@ function buildNotification(type: NotificationType, data: NotificationData): Buil
       guestHtml: guest.html,
       staffSubject: staff.subject,
       staffHtml: staff.html,
-      staffTo: uniqueEmails(parseRecipients(DOSM_EMAIL), HILTON_EVENT_EMAILS),
+      staffTo: staffRecipients(DOSM_EMAIL),
       smsBody: `Redz Restaurant: Hi ${data.name}, we received your private dining inquiry for ${data.guest_count} guests on ${data.event_date}. Our team will contact you shortly!`,
       staffSmsBody: `Private dining lead: ${data.name} | ${occasion} | ${data.guest_count} guests | ${data.event_date} | ${data.phone || data.email || ''}`,
     };
@@ -249,7 +258,7 @@ function buildNotification(type: NotificationType, data: NotificationData): Buil
       guestHtml,
       staffSubject: `NEW BANQUET INQUIRY: ${data.name}`,
       staffHtml,
-      staffTo: uniqueEmails(parseRecipients(DOSM_EMAIL), HILTON_EVENT_EMAILS),
+      staffTo: staffRecipients(DOSM_EMAIL),
       smsBody: `Redz Restaurant: Hi ${data.name}, we received your banquet inquiry for ${data.event_date}. Our team will contact you shortly!`,
       staffSmsBody: `New banquet request from ${data.name}: ${data.phone || ''}`,
     };
@@ -297,7 +306,7 @@ function buildNotification(type: NotificationType, data: NotificationData): Buil
     guestHtml,
     staffSubject: `NEW CONTACT: ${data.name}`,
     staffHtml,
-    staffTo: uniqueEmails(parseRecipients(RESTAURANT_EMAIL), HILTON_EVENT_EMAILS),
+    staffTo: staffRecipients(RESTAURANT_EMAIL),
     smsBody: '',
     staffSmsBody: `New contact message from ${data.name}: ${data.phone || data.email || ''}`,
   };
